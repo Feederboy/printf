@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/02/22 16:30:42 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/02/23 00:04:14 by matt             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,6 +158,18 @@ char	*read_args(t_args *args, char *itr)
 			args->minus = 1;
 			itr++;
 		}
+		//zero
+		if (*itr == '0')
+		{
+			args->has_zero = 1;
+			args->zero = 1;
+			if (args->minus == 1)
+			{
+				args->has_zero = 0;
+				args->zero = 0;
+			}
+			itr++;
+		}
 		//widt
 		if (ft_isdigit(*itr))
 		{
@@ -179,7 +191,7 @@ char	*read_args(t_args *args, char *itr)
 			itr += ft_nb_digits(args->prec);
 		}
 		//dxs
-		if (ft_strchr("dxsc", *itr))
+		if (ft_strchr("cspdiuxX", *itr))
 		{
 			args->c = *itr;
 			itr++;
@@ -249,22 +261,60 @@ int		ft_put_c(t_args *args, va_list ap)
 	return (res + ft_putchar(c + 0));
 }
 
-/*
+int		ft_puti(int d, int padding)
+{
+	int res;
+
+	res = 0;
+	if (d == -2147483648)
+	{
+		res += ft_putchar('-');
+		while (padding--)
+			res += ft_putchar('0');
+		res += ft_putstr("2147483648");
+		return (res);
+	}
+	if (d < 0)
+	{
+		res += ft_putchar('-');
+		d *= -1;
+	}
+	while (padding--)
+		res += ft_putchar('0');
+	if (d / 10)
+		res += ft_puti(d / 10, padding);
+	res += ft_putchar((d % 10) + '0');
+	return (res);
+}
+		
+//GERER LE ZERO VIA STRUCT AINSI QUE LETOILE POUR LE NOMBRE DE WIDTH
 int		ft_put_d(t_args *args, va_list ap)
 {
 	int width;
 	int precision;
 	int d;
 	int len;
+	int padding;
+	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
 
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
 	d = va_arg(ap, int);
 	len = ft_nb_digits(d);
-	//A COMPLETER
-
+	res = 0;
+	if (d < 0)
+		padding = (len - 1) < precision ? args->prec : 0;
+	else
+		padding = len < precision ? args->prec : 0;
+	len += padding;
+	while ((width - len) > 0)
+	{
+		res += ft_putchar(' ');
+		width--;
+	}
+	return (res + ft_puti(d, padding));
 }
-*/
+
 
 int		ft_put_conv(t_args *args, va_list ap)
 {
@@ -272,8 +322,8 @@ int		ft_put_conv(t_args *args, va_list ap)
 		return ft_put_c(args, ap);
 	else if (args->c == 's')
 		return ft_put_s(args, ap);
-//	else if (args->c == 'd')
-//		return ft_put_d(args,ap);
+	else if (args->c == 'd')
+		return ft_put_d(args,ap);
 //	else if (args->c == 'p')
 //		return ft_put_p(args, ap);
 //	else if (args->c == 'i')
@@ -321,7 +371,7 @@ int		ft_printf(const char *format, ...)
 
 
 
-/*
+
 int main()
 {
 	printf("\n\n\n S \n\n\n");
@@ -352,6 +402,15 @@ int main()
 	ft_printf("[%10.0s]\n", NULL);
 
 
+	printf("D \n\n\n");
+
+	printf("[%05d]\n", 0);
+	printf("[%05d]\n", -7);
+	printf("[%05d]\n", 123456789);
+	printf("[%05d]\n", -203435);
+	printf("[%05d]\n", -203435);
+	printf("[%05d]\n", -203435);
+	
 	printf("\n\n\nTRUE PRINTF\n\n");
 	
 	printf("\n\n\n S \n\n\n");
@@ -362,7 +421,7 @@ int main()
 	printf("[%3.10s]\n", "hoge");
 	printf("[%10.0s]\n", "hoge");
 
-	printf("C \n\n\n");
+	printf("\n\n\n C \n\n\n");
 
 	printf("[%c]\n", 'a');
 	printf("[%10c]\n", 'a');
@@ -381,10 +440,10 @@ int main()
 	return (0);
 }
 
-*/
 
 
 
+/*
 
 #include <stdio.h>
 #include <unistd.h>
@@ -415,7 +474,7 @@ void	char_test(void)
 	printf("11==={%3c}\n", -0);
 	ft_printf("11==={%3c}\n", -0);
 }
-/*
+
 void	str_test(void)
 {
 	char *str = "Ceci est un test.";
@@ -439,9 +498,9 @@ void	str_test(void)
 	printf("%-*.*s\n", -7, -3, str);
 	ft_printf("%-*.*s\n", -7, -3, str);
 }
-*/
 
-/*
+
+
 void	ptr_test(void)
 {
 	char	*str = "Ceci est un test.";
@@ -776,7 +835,7 @@ void	lmod_test(void)
 	printf("{%3lc}\n", -0);
 	ft_printf("{%3lc}\n", -0);
 }
-*/
+
 int		main(void)
 {
 	char_test();
@@ -792,3 +851,5 @@ int		main(void)
 //	blank_test();
 	return (0);
 }
+
+*/
