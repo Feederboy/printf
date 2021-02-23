@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/02/23 00:04:14 by matt             ###   ########.fr       */
+/*   Updated: 2021/02/23 15:03:43 by matt             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,7 @@ char	*read_args(t_args *args, char *itr)
 {
 	if (!itr || *itr != '%')
 		return (itr);
-	itr++; //deplace apres le %
+	itr++;
 	while (*itr)
 	{
 		init_args(args);
@@ -158,6 +158,7 @@ char	*read_args(t_args *args, char *itr)
 			args->minus = 1;
 			itr++;
 		}
+		//*width
 		//zero
 		if (*itr == '0')
 		{
@@ -170,7 +171,7 @@ char	*read_args(t_args *args, char *itr)
 			}
 			itr++;
 		}
-		//widt
+		//widt ---- if there's no *width before
 		if (ft_isdigit(*itr))
 		{
 			args->has_width = 1;
@@ -183,7 +184,8 @@ char	*read_args(t_args *args, char *itr)
 			args->has_prec = 1;
 			itr++;
 		}
-		//prec
+		//*prec
+		//prec  --- if there's no *prec before
 		if (ft_isdigit(*itr))
 		{
 			args->has_prec = 1;
@@ -223,10 +225,23 @@ int		ft_put_s(t_args *args, va_list ap)
 			len = precision;
 	}
 	res = 0;
-	while ((width - len) > 0)
+	if (args->minus)
 	{
-		res += ft_putchar(' ');
-		width--;
+		res += ft_putstrl(s,len);
+		while ((width - len) > 0)
+		{
+			res += ft_putchar(' ');
+			width--;
+		}
+		return (res);
+	}
+	else
+	{
+		while ((width - len) > 0)
+		{
+			res += ft_putchar(' ');
+			width--;
+		}
 	}
 	return (res + ft_putstrl(s, len));
 }
@@ -437,6 +452,12 @@ int main()
 	printf("[%3.10s]\n", NULL);
 	printf("[%10.0s]\n", NULL);
 
+	printf("\n\n\nRANDOM TESTS\n\n");
+	
+	printf("[%-*.*s]\n", 25, 10 , "jeanmichel");
+	printf("[%-10.*s]\n", 25, 10,  "jeanmichel");
+	printf("[%10.0s]\n", NULL);
+	
 	return (0);
 }
 
