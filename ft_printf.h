@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:08:04 by matt              #+#    #+#             */
-/*   Updated: 2021/02/22 16:30:46 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/02/24 14:59:24 by matt             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,11 @@ typedef struct	s_args
 	int minus;
 	int has_zero;
 	int zero;
+	int has_star_width;
+	int star_width;
+	int has_star_prec;
+	int star_prec;
+	int res;
 }				t_args;
 
 

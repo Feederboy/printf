@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/02/23 15:03:43 by matt             ###   ########.fr       */
+/*   Updated: 2021/02/24 17:00:50 by matt             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,9 +142,15 @@ void	init_args(t_args *args)
 	args->minus = 0;
 	args->has_zero = 0;
 	args->zero = 0;
+	args->has_star_width = 0;
+	args->star_width = -1;
+	args->has_star_prec = 0;
+	args->star_prec = -1;
+	args-> res = 0;
+	
 }
 
-char	*read_args(t_args *args, char *itr)
+char	*read_args(t_args *args, char *itr, va_list ap)
 {
 	if (!itr || *itr != '%')
 		return (itr);
@@ -158,7 +164,13 @@ char	*read_args(t_args *args, char *itr)
 			args->minus = 1;
 			itr++;
 		}
-		//*width
+		// * width
+		if (*itr == '*')
+		{
+			args->has_star_width = 1;
+			args->star_width = va_arg(ap, int);
+			itr++;
+		}
 		//zero
 		if (*itr == '0')
 		{
@@ -184,13 +196,24 @@ char	*read_args(t_args *args, char *itr)
 			args->has_prec = 1;
 			itr++;
 		}
-		//*prec
+		// * prec
+		if (*itr == '*')
+		{
+			args->has_star_prec = 1;
+			args->star_prec = va_arg(ap, int);
+			itr++;
+		}
 		//prec  --- if there's no *prec before
 		if (ft_isdigit(*itr))
 		{
-			args->has_prec = 1;
-			args->prec = ft_atoi(itr);
-			itr += ft_nb_digits(args->prec);
+			if (args->has_star_prec == 0)
+			{
+				args->has_prec = 1;
+				args->prec = ft_atoi(itr);
+				itr += ft_nb_digits(args->prec);
+			}
+			else
+				itr += ft_nb_digits(ft_atoi(itr));
 		}
 		//dxs
 		if (ft_strchr("cspdiuxX", *itr))
@@ -276,7 +299,7 @@ int		ft_put_c(t_args *args, va_list ap)
 	return (res + ft_putchar(c + 0));
 }
 
-int		ft_puti(int d, int padding)
+int		ft_put_d_zero(int d, int padding)
 {
 	int res;
 
@@ -284,7 +307,7 @@ int		ft_puti(int d, int padding)
 	if (d == -2147483648)
 	{
 		res += ft_putchar('-');
-		while (padding--)
+		while (padding-- > 0)
 			res += ft_putchar('0');
 		res += ft_putstr("2147483648");
 		return (res);
@@ -294,10 +317,10 @@ int		ft_puti(int d, int padding)
 		res += ft_putchar('-');
 		d *= -1;
 	}
-	while (padding--)
+	while (padding-- > 0)
 		res += ft_putchar('0');
 	if (d / 10)
-		res += ft_puti(d / 10, padding);
+		res += ft_put_d_zero(d / 10, padding);
 	res += ft_putchar((d % 10) + '0');
 	return (res);
 }
@@ -311,6 +334,7 @@ int		ft_put_d(t_args *args, va_list ap)
 	int len;
 	int padding;
 	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
+	
 
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
@@ -318,16 +342,16 @@ int		ft_put_d(t_args *args, va_list ap)
 	len = ft_nb_digits(d);
 	res = 0;
 	if (d < 0)
-		padding = (len - 1) < precision ? args->prec : 0;
+		padding = (len - 1) < precision ? (precision - (len - 1)) : 0;
 	else
-		padding = len < precision ? args->prec : 0;
+		padding = len < precision ? (precision - len) : 0;
 	len += padding;
 	while ((width - len) > 0)
 	{
 		res += ft_putchar(' ');
 		width--;
 	}
-	return (res + ft_puti(d, padding));
+	return (res + ft_put_d_zero(d, padding));
 }
 
 
@@ -368,7 +392,7 @@ int		ft_printf(const char *format, ...)
 	{
 		if (*itr == '%')
 		{
-			itr = read_args(&args, itr);
+			itr = read_args(&args, itr, ap);
 			res += ft_put_conv(&args, ap);
 			continue;
 		}
@@ -378,7 +402,6 @@ int		ft_printf(const char *format, ...)
 	va_end(ap);
 	return (res);
 }
-
 
 
 
@@ -419,12 +442,12 @@ int main()
 
 	printf("D \n\n\n");
 
-	printf("[%05d]\n", 0);
-	printf("[%05d]\n", -7);
-	printf("[%05d]\n", 123456789);
-	printf("[%05d]\n", -203435);
-	printf("[%05d]\n", -203435);
-	printf("[%05d]\n", -203435);
+	ft_printf("[%05d]\n", 0);
+	ft_printf("[%05d]\n", -7);
+	ft_printf("[%05d]\n", 123456789);
+	ft_printf("[%05d]\n", -203435);
+	ft_printf("[%05d]\n", -203435);
+	ft_printf("[%05d]\n", -203435);
 	
 	printf("\n\n\nTRUE PRINTF\n\n");
 	
@@ -455,12 +478,36 @@ int main()
 	printf("\n\n\nRANDOM TESTS\n\n");
 	
 	printf("[%-*.*s]\n", 25, 10 , "jeanmichel");
-	printf("[%-10.*s]\n", 25, 10,  "jeanmichel");
-	printf("[%10.0s]\n", NULL);
+	printf("[%5.d]\n", 25);
 	
+	ft_printf("[%8d]\n", -62);
+	ft_printf("[%09.12d]\n", 254);
+	printf("[%09.12d]\n", 254);
+
+	printf("\n\n\nTEST DDDDDDDD\n\n\n");
+
+
+	printf("%8d\n", -62);
+	ft_printf("%8d\n", -62);
+	printf("%.16d\n", -21578);
+	ft_printf("%.16d\n", -21578);
+	printf("%15ld\n", -2147483648);
+	ft_printf("%15d\n", -2147483648);
+	printf("%16.13d\n", -9587);
+	ft_printf("%16.13d\n", -9587);
+	printf("%-.8d\n", -9867);
+	ft_printf("%-.8d\n", -9867);
+	printf("%09.12d\n", -254);
+	ft_printf("%09.12d\n", -254);
+	printf("%2.3d\n", 0);
+	ft_printf("%2.3d\n", 0);
+	printf("%*.*d\n", 0, 0, 0);
+	ft_printf("%*.*d\n", 0, 0, 0);
+
+
+
 	return (0);
 }
-
 
 
 
@@ -521,7 +568,6 @@ void	str_test(void)
 }
 
 
-
 void	ptr_test(void)
 {
 	char	*str = "Ceci est un test.";
@@ -566,27 +612,25 @@ void	uint_test(void)
 	printf("%*.*u\n", 0, 0, 0);
 	ft_printf("%*.*u\n", 0, 0, 0);
 }
-
 void	int_test(void)
 {
-	printf("%8i\n", -62);
-	ft_printf("%8i\n", -62);
+	printf("%8d\n", -62);
+	ft_printf("%8d\n", -62);
 	printf("%.16d\n", -21578);
 	ft_printf("%.16d\n", -21578);
-	printf("%15i\n", INT_MIN);
-	ft_printf("%15i\n", INT_MIN);
+	printf("%15d\n", INT_MIN);
+	ft_printf("%15d\n", INT_MIN);
 	printf("%16.13d\n", -9587);
 	ft_printf("%16.13d\n", -9587);
-	printf("%-.8i\n", -9867);
-	ft_printf("%-.8i\n", -9867);
+	printf("%-.8d\n", -9867);
+	ft_printf("%-.8d\n", -9867);
 	printf("%09.12d\n", -254);
 	ft_printf("%09.12d\n", -254);
 	printf("%2.3d\n", 0);
 	ft_printf("%2.3d\n", 0);
-	printf("%*.*i\n", 0, 0, 0);
-	ft_printf("%*.*i\n", 0, 0, 0);
+	printf("%*.*d\n", 0, 0, 0);
+	ft_printf("%*.*d\n", 0, 0, 0);
 }
-
 void	hex_test(void)
 {
 	printf("%8x\n", -62);
@@ -856,14 +900,13 @@ void	lmod_test(void)
 	printf("{%3lc}\n", -0);
 	ft_printf("{%3lc}\n", -0);
 }
-
 int		main(void)
 {
 	char_test();
 //	str_test();
 //	ptr_test();
 //	uint_test();
-//	int_test();
+	int_test();
 //	hex_test();
 //	notype_test();
 //	count_test();
@@ -872,5 +915,4 @@ int		main(void)
 //	blank_test();
 	return (0);
 }
-
 */
