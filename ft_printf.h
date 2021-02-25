@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:08:04 by matt              #+#    #+#             */
-/*   Updated: 2021/02/24 14:59:24 by matt             ###   ########.fr       */
+/*   Updated: 2021/02/25 12:36:52 by maquentr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,5 +35,6 @@ typedef struct	s_args
 	int res;
 }				t_args;
 
+char	*ft_itoa_base(long n, char *base);
 
 #endif
