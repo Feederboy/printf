@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/02/25 15:13:39 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/03/01 17:16:50 by maquentr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -211,10 +211,27 @@ char			*ft_itoa_base(long n, char *base)
 	return (result);
 }
 
+int		ft_check_full_zero(t_args *args, int d)
+{
+	printf("width = %d\n -- prec = %d\n  -- star_width = %d\n  -- star_prec = %d\n", args->width, args->prec, args->star_width, args->star_prec);
+	if (!args->width && !args->prec && !args->star_width &&
+			!args->star_prec && !d)
+		return (1);
+	return (0);
+}
+
+int		ft_check_full_zero_long(t_args *args, long d)
+{
+	if (!args->width && args->prec && !args->star_width &&
+			!args->star_prec && !d)
+		return (1);
+	return (0);
+}
+
 void	init_args(t_args *args)
 {
 	args->c = 0;
-	args->width = 0;
+	args->width = -1;
 	args->has_width = 0;
 	args->prec = -1;
 	args->has_prec = 0;
@@ -320,8 +337,10 @@ int		ft_put_p(t_args *args, va_list ap)
 	base = "0123456789abcdef";
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
-	width = args->has_star_width ? args->star_width : 0;
-	precision = args->has_star_prec ? args->star_prec : 0;
+	if (args->has_star_width)
+		width = args->has_star_width ? args->star_width : 0;
+	if (args->has_star_prec)
+		precision = args->has_star_prec ? args->star_prec : 0;
 	s = (long)va_arg(ap, void *);
 	tmp = ft_itoa_base(s, base);
 	tmp = ft_strjoin("0x", tmp);
@@ -335,7 +354,7 @@ int		ft_put_p(t_args *args, va_list ap)
 	if (args->minus)
 	{
 		res += ft_putstrl(tmp, len);
-		while ((width - len) > 0)
+		while ((width - ft_strlen(tmp)) > 0)
 		{
 			res += ft_putchar(' ');
 			width--;
@@ -344,7 +363,7 @@ int		ft_put_p(t_args *args, va_list ap)
 	}
 	else
 	{
-		while ((width - len) > 0)
+		while ((width - ft_strlen(tmp)) > 0)
 		{
 			res += ft_putchar(' ');
 			width--;
@@ -362,16 +381,24 @@ int		ft_put_X(t_args *args, va_list ap)
 	int res;
 	char *base;
 	char *tmp;
+	int padding;
+	int tg = 0;
 
 	base = "0123456789ABCDEF";
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
-	width = args->has_star_width ? args->star_width : 0;
-	precision = args->has_star_prec ? args->star_prec : 0;
+	if (args->has_star_width){
+		width = args->has_star_width ? args->star_width : 0;
+	}
+	if (args->has_star_prec){
+		precision = args->has_star_prec ? args->star_prec : 0;
+	}
 	s = (long)va_arg(ap, void *);
+	if (ft_check_full_zero_long(args, s))
+			return (0);
 	tmp = ft_itoa_base(s, base);
 	len = ft_strlen(tmp);
-	printf("TMP1 = %s\n", tmp);
+	padding = len < precision ? (precision - len) : 0;
 	if (args->has_prec)
 	{
 		if (len > precision)
@@ -380,10 +407,13 @@ int		ft_put_X(t_args *args, va_list ap)
 	res = 0;
 	if (args->minus)
 	{
-		printf("TMP2 = %s\n", tmp);
-		res += ft_putstrl(tmp, len);
-		printf("TMP3 = %s\n", tmp);
-		while ((width - len) > 0)
+		while (padding-- > 0)
+		{
+			res += ft_putchar('0');
+			tg++;
+		}
+		res += ft_putstrl(tmp, ft_strlen(tmp));
+		while ((width - (tg + ft_strlen(tmp))) > 0)
 		{
 			res += ft_putchar(' ');
 			width--;
@@ -392,14 +422,28 @@ int		ft_put_X(t_args *args, va_list ap)
 	}
 	else
 	{
-		while ((width - len) > 0)
+		if (precision && len < precision)
 		{
-			res += ft_putchar(' ');
-			width--;
+			while ((width - precision) > 0)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
+		}
+		else if(!precision)
+		{
+			while ((width - len) > 0)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
+		}
+		while (padding-- > 0)
+		{
+			res += ft_putchar('0');
 		}
 	}
 
-	printf("TMP4 = %s\n", tmp);
 	return (res + ft_putstr(tmp));
 }
 
@@ -412,15 +456,24 @@ int		ft_put_x(t_args *args, va_list ap)
 	int res;
 	char *base;
 	char *tmp;
+	int padding;
+	int tg = 0;
 
 	base = "0123456789abcdef";
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
-	width = args->has_star_width ? args->star_width : 0;
-	precision = args->has_star_prec ? args->star_prec : 0;
+	if (args->has_star_width){
+		width = args->has_star_width ? args->star_width : 0;
+	}
+	if (args->has_star_prec){
+		precision = args->has_star_prec ? args->star_prec : 0;
+	}
 	s = (long)va_arg(ap, void *);
+	if (ft_check_full_zero_long(args, s))
+			return (0);
 	tmp = ft_itoa_base(s, base);
 	len = ft_strlen(tmp);
+	padding = len < precision ? (precision - len) : 0;
 	if (args->has_prec)
 	{
 		if (len > precision)
@@ -429,8 +482,13 @@ int		ft_put_x(t_args *args, va_list ap)
 	res = 0;
 	if (args->minus)
 	{
+		while (padding-- > 0)
+		{
+			res += ft_putchar('0');
+			tg++;
+		}
 		res += ft_putstrl(tmp, len);
-		while ((width - len) > 0)
+		while ((width - (tg + len)) > 0)
 		{
 			res += ft_putchar(' ');
 			width--;
@@ -439,14 +497,31 @@ int		ft_put_x(t_args *args, va_list ap)
 	}
 	else
 	{
-		while ((width - len) > 0)
+		if (precision && len < precision)
 		{
-			res += ft_putchar(' ');
-			width--;
+			while ((width - precision) > 0)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
+		}
+		else if(!precision)
+		{
+			while ((width - len) > 0)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
+		}
+		while (padding-- > 0)
+		{
+			res += ft_putchar('0');
 		}
 	}
-	return (res + ft_putstrl(tmp, len));
+
+	return (res + ft_putstr(tmp));
 }
+
 
 int		ft_put_s(t_args *args, va_list ap)
 {
@@ -458,8 +533,12 @@ int		ft_put_s(t_args *args, va_list ap)
 
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
-	width = args->has_star_width ? args->star_width : 0;
-	precision = args->has_star_prec ? args->star_prec : 0;
+	if (args->has_star_width){
+		width = args->has_star_width ? args->star_width : 0;
+	}
+	if (args->has_star_prec){
+		precision = args->has_star_prec ? args->star_prec : 0;
+	}
 	s = va_arg(ap, char *);
 	if (!s)
 		s = "(null)";
@@ -521,6 +600,55 @@ int		ft_put_c(t_args *args, va_list ap)
 	return (res + ft_putchar(c + 0));
 }
 
+
+int		ft_put_u_zero(unsigned int u, int padding)
+{
+	int res;
+
+	res = 0;
+	while (padding-- > 0)
+		res += ft_putchar('0');
+	if (u / 10)
+		res += ft_put_u_zero(u / 10, padding);
+	res += ft_putchar((u % 10) + '0');
+	return (res);
+}
+		
+int		ft_put_u(t_args *args, va_list ap)
+{
+	int width;
+	int precision;
+	unsigned int u;
+	int len;
+	int padding;
+	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
+	
+	
+	width = args->has_width ? args->width : 0;
+	precision = args->has_prec ? args->prec : 0;
+	if (args->has_star_width){
+		width = args->has_star_width ? args->star_width : 0;
+	}
+	if (args->has_star_prec){
+		precision = args->has_star_prec ? args->star_prec : 0;
+	}
+	u = va_arg(ap, int);
+	printf("ALLLO = %d\n", ft_check_full_zero(args, u));
+	if (ft_check_full_zero(args, u))
+		return (0);
+	len = ft_nb_digits(u);
+	res = 0;
+	padding = len < precision ? (precision - len) : 0;
+	len += padding;
+	while ((width - len) > 0)
+	{
+		res += ft_putchar(' ');
+		width--;
+	}
+	return (res + ft_put_u_zero(u, padding));
+}
+
+
 int		ft_put_d_zero(int d, int padding)
 {
 	int res;
@@ -546,7 +674,8 @@ int		ft_put_d_zero(int d, int padding)
 	res += ft_putchar((d % 10) + '0');
 	return (res);
 }
-		
+
+
 //GERER LE ZERO VIA STRUCT AINSI QUE LETOILE POUR LE NOMBRE DE WIDTH
 int		ft_put_d(t_args *args, va_list ap)
 {
@@ -560,9 +689,15 @@ int		ft_put_d(t_args *args, va_list ap)
 
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
-	width = args->has_star_width ? args->star_width : 0;
-	precision = args->has_star_prec ? args->star_prec : 0;
+	if (args->has_star_width){
+		width = args->has_star_width ? args->star_width : 0;
+	}
+	if (args->has_star_prec){
+		precision = args->has_star_prec ? args->star_prec : 0;
+	}
 	d = va_arg(ap, int);
+	if (ft_check_full_zero(args, d))
+			return (0);
 	len = ft_nb_digits(d);
 	res = 0;
 	if (d < 0)
@@ -616,9 +751,15 @@ int		ft_put_i(t_args *args, va_list ap)
 
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
-	width = args->has_star_width ? args->star_width : 0;
-	precision = args->has_star_prec ? args->star_prec : 0;
+	if (args->has_star_width){
+		width = args->has_star_width ? args->star_width : 0;
+	}
+	if (args->has_star_prec){
+		precision = args->has_star_prec ? args->star_prec : 0;
+	}
 	d = va_arg(ap, int);
+	if (ft_check_full_zero(args, d))
+			return (0);
 	len = ft_nb_digits(d);
 	res = 0;
 	if (d < 0)
@@ -647,8 +788,8 @@ int		ft_put_conv(t_args *args, va_list ap)
 		return ft_put_p(args, ap);
 	else if (args->c == 'i')
 		return ft_put_i(args, ap);
-//	else if (args->c == 'u')
-//		return ft_put_u(args, ap);
+	else if (args->c == 'u')
+		return ft_put_u(args, ap);
 	else if (args->c == 'x')
 		return ft_put_x(args, ap);
 	else if (args->c == 'X')
@@ -728,6 +869,7 @@ int main()
 	ft_printf("[%05d]\n", -203435);
 	ft_printf("[%05d]\n", -203435);
 	ft_printf("[%05d]\n", -203435);
+	ft_printf("[%3.2d]\n", 203435);
 	
 	printf("\n\n\nTRUE PRINTF\n\n");
 	
@@ -767,22 +909,24 @@ int main()
 	printf("\n\n\nTEST DDDDDDDD\n\n\n");
 
 
-	printf("%8d\n", -62);
-	ft_printf("%8d\n", -62);
-	printf("%.16d\n", -21578);
-	ft_printf("%.16d\n", -21578);
-	printf("%15ld\n", -2147483648);
-	ft_printf("%15d\n", -2147483648);
-	printf("%16.13d\n", -9587);
-	ft_printf("%16.13d\n", -9587);
-	printf("%-.8d\n", -9867);
-	ft_printf("%-.8d\n", -9867);
-	printf("%09.12d\n", -254);
-	ft_printf("%09.12d\n", -254);
-	printf("%2.3d\n", 0);
-	ft_printf("%2.3d\n", 0);
-	printf("%*.*d\n", 5, 3, 12);
-	ft_printf("%*.*d\n", 5, 3, 12);
+	printf("PRINT[%8d]\n", -62);
+	ft_printf("   FT[%8d]\n", -62);
+	printf("PRINT[%.16d]\n", -21578);
+	ft_printf("   FT[%.16d]\n", -21578);
+	printf("PRINT[%15ld]\n", -2147483648);
+	ft_printf("   FT[%15d]\n", -2147483648);
+	printf("PRINT[%16.13d]\n", -9587);
+	ft_printf("   FT[%16.13d]\n", -9587);
+	printf("PRINT[%-.8d]\n", -9867);
+	ft_printf("   FT[%-.8d]\n", -9867);
+	printf("PRINT[%09.12d]\n", -254);
+	ft_printf("   FT[%09.12d]\n", -254);
+	printf("PRINT[%2.3d]\n", 0);
+	ft_printf("   ft[%2.3d]\n", 0);
+	printf("PRINT[%*.*d]\n", 5, 3, 12);
+	ft_printf("   FT[%*.*d]\n", 5, 3, 12);
+	printf("PRINT[%*.*d]\n", 0, 0, 0);
+	ft_printf("   FT[%*.*d]\n", 0, 0, 0);
 
 
 	
@@ -791,46 +935,71 @@ int main()
 	
 	char	*str = "Ceci est un test.";
 	
-	ft_printf("%p\n", str);
-	printf("%p\n", str);
-	ft_printf("%8p\n", str);
-	printf("%8p\n", str);
-	ft_printf("%16p\n", str);
-	printf("%16p\n", str);
-	ft_printf("%15p\n", str);
-	printf("%15p\n", str);
-	ft_printf("%-15p\n", str);
-	printf("%-15p\n", str);
-	ft_printf("%16p\n", str);
-	printf("%16p\n", str);
-	ft_printf("%9p\n", str);
-	printf("%9p\n", str);
-	ft_printf("%p\n", NULL);
-	printf("%p\n", NULL);
-	ft_printf("%2p\n", NULL);
-	printf("%2p\n", NULL);
-	ft_printf("%*p\n", 0, NULL);
-	printf("%*p\n", 0, NULL);
+	ft_printf("   FT[%p]\n", str);
+	printf("PRINT[%p]\n", str);
+	ft_printf("   FT[%8p]\n", str);
+	printf("PRINT[%8p]\n", str);
+	ft_printf("   FT[%16p]\n", str);
+	printf("PRINT[%16p]\n", str);
+	ft_printf("   FT[%15p]\n", str);
+	printf("PRINT[%15p]\n", str);
+	ft_printf("   FT[%-15p]\n", str);
+	printf("PRINT[%-15p]\n", str);
+	ft_printf("   FT[%16p]\n", str);
+	printf("PRINT[%16p]\n", str);
+	ft_printf("   FT[%9p]\n", str);
+	printf("PRINT[%9p]\n", str);
+	ft_printf("   FT[%p]\n", NULL);
+	printf("PRINT[%p]\n", NULL);
+	ft_printf("   FT[%2p]\n", NULL);
+	printf("PRINT[%2p]\n", NULL);
+	ft_printf("   FT[%*p]\n", 0, NULL);
+	printf("PRINT[%*p]\n", 0, NULL);
 
 
 	printf("\n\n\nTEST HEX\n\n\n");
 
-	printf("%8x\n", -62);
-	printf("%8x\n", -62);
-	printf("%.16X\n", -21578);
-	ft_printf("%.16X\n", -21578);
-	printf("%15x\n", -42);
-	ft_printf("%15x\n", -42);
+	printf("PRINTF[%8x]\n", -62);
+	ft_printf("    FT[%8x]\n", -62);
+	printf("PRINTF[%.16X]\n", -21578);
+	ft_printf("    FT[%.16X]\n", -21578);
+	printf("PRINTF[%15x]\n", -42);
+	ft_printf("    FT[%15x]\n", -42);
 	printf("PRINTF[%16.13X]\n", -9587);
-	ft_printf("FT[%16.13X]\n", -9587);
-	printf("%-.8x\n", -9867);
-	ft_printf("%-.8x\n", -9867);
-	printf("%09.12X\n", -254);
-	ft_printf("%09.12X\n", -254);
-	printf("%2.3x\n", 0);
-	ft_printf("%2.3x\n", 0);
-	printf("TRQLQQ%*.*X\n", 3, 2, 246688);
-	ft_printf("TROLOL%*.*X\n", 3, 2, 246688);
+	ft_printf("    FT[%16.13X]\n", -9587);
+	printf("PRINTF[%-.8x]\n", -9867);
+	ft_printf("    FT[%-.8x]\n", -9867);
+	printf("PRINT[%09.12X]\n", -254);
+	ft_printf("   FT[%09.12X]\n", -254);
+	printf("PRINTF[%2.3x]\n", 0);
+	ft_printf("    FT[%2.3x]\n", 0);
+	printf("PRINT[%*.*X]\n", 3, 2, 246688);
+	ft_printf("   FT[%*.*X]\n", 3, 2, 246688);
+	printf("PRINTF[%-16.13X]\n", -9587);
+	ft_printf("    FT[%-16.13X]\n", -9587);
+	printf("PRINTF[%-16.2X]\n", -9587);
+	ft_printf("    FT[%-16.2X]\n", -9587);
+	printf("PRINT[%*.*X]\n", 0, 0, 0);
+	ft_printf("   ft[%*.*X]\n", 0, 0, 0);
+
+	printf("\n\n\nTEST U\n\n\n");
+
+	printf("PRINT[%8u]\n", 62);
+	ft_printf("   ft[%8u]\n", 62);
+	printf("PRINT[%.16u]\n", 21578);
+	ft_printf("   ft[%.16u]\n", 21578);
+	printf("PRINT[%15u]\n", 42);
+	ft_printf("   ft[%15u]\n", 42);
+	printf("PRINT[%16.13u]\n", 9587);
+	ft_printf("   ft[%16.13u]\n", 9587);
+	printf("PRINT[%-.8u]\n", 9867);
+	ft_printf("   ft[%-.8u]\n", 9867);
+	printf("PRINT[%09.12u]\n", 254);
+	ft_printf("   ft[%09.12u]\n", 254);
+	printf("PRINT[%2.3u]\n", 0);
+	ft_printf("   ft[%2.3u]\n", 0);
+	printf("PRINT[%*.*u]\n", 0, 0, 0);
+	ft_printf("   ft[%*.*u]\n", 0, 0, 0);
 
 
 	return (0);
