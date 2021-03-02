@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:08:04 by matt              #+#    #+#             */
-/*   Updated: 2021/02/25 12:36:52 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/03/02 12:50:40 by maquentr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ typedef struct	s_args
 	int has_star_prec;
 	int star_prec;
 	int res;
+	int percent;
 }				t_args;
 
 char	*ft_itoa_base(long n, char *base);

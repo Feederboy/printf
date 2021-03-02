@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/03/01 17:16:50 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/03/02 13:08:16 by maquentr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,17 +213,16 @@ char			*ft_itoa_base(long n, char *base)
 
 int		ft_check_full_zero(t_args *args, int d)
 {
-	printf("width = %d\n -- prec = %d\n  -- star_width = %d\n  -- star_prec = %d\n", args->width, args->prec, args->star_width, args->star_prec);
-	if (!args->width && !args->prec && !args->star_width &&
-			!args->star_prec && !d)
+	if ((!args->width && !args->prec && !d) || (!args->star_width &&
+			!args->star_prec && !d))
 		return (1);
 	return (0);
 }
 
 int		ft_check_full_zero_long(t_args *args, long d)
 {
-	if (!args->width && args->prec && !args->star_width &&
-			!args->star_prec && !d)
+	if ((!args->width && !args->prec && !d) || (!args->star_width &&
+			!args->star_prec && !d))
 		return (1);
 	return (0);
 }
@@ -243,6 +242,7 @@ void	init_args(t_args *args)
 	args->has_star_prec = 0;
 	args->star_prec = -1;
 	args-> res = 0;
+	args->percent = 0;
 	
 }
 
@@ -312,7 +312,7 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 				itr += ft_nb_digits(ft_atoi(itr));
 		}
 		//dxs
-		if (ft_strchr("cspdiuxX", *itr))
+		if (ft_strchr("cspdiuxX%", *itr))
 		{
 			args->c = *itr;
 			itr++;
@@ -600,6 +600,34 @@ int		ft_put_c(t_args *args, va_list ap)
 	return (res + ft_putchar(c + 0));
 }
 
+int		ft_put_percent(t_args *args, va_list ap)
+{
+	int width;
+	int res;
+	(void)ap;
+	width = args->has_width ? args->width : 0;
+	res = 0;
+	if (args->minus == 1)
+	{
+		res += ft_putchar('%');
+		while (width > 1)
+		{
+			res += ft_putchar(' ');
+			width--;
+		}
+		return (res);
+	}
+	else
+	{
+		while (width > 1)
+		{
+			res += ft_putchar(' ');
+			width--;
+		}
+	}
+	return (res + ft_putchar('%'));
+}
+
 
 int		ft_put_u_zero(unsigned int u, int padding)
 {
@@ -633,7 +661,6 @@ int		ft_put_u(t_args *args, va_list ap)
 		precision = args->has_star_prec ? args->star_prec : 0;
 	}
 	u = va_arg(ap, int);
-	printf("ALLLO = %d\n", ft_check_full_zero(args, u));
 	if (ft_check_full_zero(args, u))
 		return (0);
 	len = ft_nb_digits(u);
@@ -794,6 +821,8 @@ int		ft_put_conv(t_args *args, va_list ap)
 		return ft_put_x(args, ap);
 	else if (args->c == 'X')
 		return ft_put_X(args, ap);
+	else if(args->c == '%')
+		return ft_put_percent(args, ap);
 	return (0);
 }
 
@@ -829,7 +858,7 @@ int		ft_printf(const char *format, ...)
 
 
 
-
+/*
 
 int main()
 {
@@ -1004,10 +1033,9 @@ int main()
 
 	return (0);
 }
+*/
 
 
-
-/*
 
 #include <stdio.h>
 #include <unistd.h>
@@ -1149,20 +1177,20 @@ void	hex_test(void)
 
 void	notype_test(void)
 {
-	printf("%8%\n");
-	ft_printf("%8%\n");
-	printf("%.16%\n");
-	ft_printf("%.16%\n");
-	printf("%15%\n");
-	ft_printf("%15%\n");
-	printf("%16.13%\n");
-	ft_printf("%16.13%\n");
-	printf("%-.8%\n");
-	ft_printf("%-.8%\n");
-	printf("%09.12%\n");
-	ft_printf("%09.12%\n");
-	printf("%2.3%\n");
-	ft_printf("%2.3%\n");
+	printf("PRINT[%8%]\n");
+	ft_printf("   FT[%8%]\n");
+	printf("PRINT[%.16%]\n");
+	ft_printf("   FT[%.16%]\n");
+	printf("PRINT[%15%]\n");
+	ft_printf("   FT[%15%]\n");
+	printf("PRINT[%16.13%]\n");
+	ft_printf("   FT[%16.13%]\n");
+	printf("PRINT[%-.8%]\n");
+	ft_printf("   FT[%-.8%]\n");
+	printf("PRINT[%09.12%]\n");
+	ft_printf("   FT[%09.12%]\n");
+	printf("PRINT[%2.3%]\n");
+	ft_printf("   FT[%2.3%]\n");
 }
 
 void	count_test(void)
@@ -1173,80 +1201,9 @@ void	count_test(void)
 	ft_printf("oiajwefioja ijargfijg%nfawefaf iuhawef\n", &count2);
 	printf("%d68 erte4 6q8e4r %n -> %d\n", count, &count, count);
 	ft_printf("%d68 erte4 6q8e4r %n -> %d\n", count2, &count2, count2);
-}
 
-void	altflag_test(void)
-{
-	printf("%#8x\n", -62);
-	ft_printf("%#8x\n", -62);
-	printf("%#.16X\n", -21578);
-	ft_printf("%#.16X\n", -21578);
-	printf("%#15x\n", -42);
-	ft_printf("%#15x\n", -42);
-	printf("%#16.13X\n", -9587);
-	ft_printf("%#16.13X\n", -9587);
-	printf("%#-.8x\n", -9867);
-	ft_printf("%#-.8x\n", -9867);
-	printf("%#09.12X\n", -254);
-	ft_printf("%#09.12X\n", -254);
-	printf("%#2.3x\n", 0);
-	ft_printf("%#2.3x\n", 0);
-	printf("%#*.*X\n", 0, 0, 0);
-	ft_printf("%#*.*X\n", 0, 0, 0);
 }
-
-void	sign_test(void)
-{
-	printf("%+8u\n", 62);
-	ft_printf("%+8u\n", 62);
-	printf("%+.16u\n", 21578);
-	ft_printf("%+.16u\n", 21578);
-	printf("%+15u\n", 42);
-	ft_printf("%+15u\n", 42);
-	printf("%+16.13u\n", 9587);
-	ft_printf("%+16.13u\n", 9587);
-	printf("%+-.8u\n", 9867);
-	ft_printf("%+-.8u\n", 9867);
-	printf("%+09.12u\n", 254);
-	ft_printf("%+09.12u\n", 254);
-	printf("%+2.3u\n", 0);
-	ft_printf("%+2.3u\n", 0);
-	printf("%+*.*u\n", 0, 0, 0);
-	ft_printf("%+*.*u\n", 0, 0, 0);
-	printf("%+8i\n", -62);
-	ft_printf("%+8i\n", -62);
-	printf("%+.16d\n", -21578);
-	ft_printf("%+.16d\n", -21578);
-	printf("%+15i\n", INT_MIN);
-	ft_printf("%+15i\n", INT_MIN);
-	printf("%+16.13d\n", -9587);
-	ft_printf("%+16.13d\n", -9587);
-	printf("%-4i\n", -9867);
-	ft_printf("%-4i\n", -9867);
-	printf("%+09.12d\n", -254);
-	ft_printf("%+09.12d\n", -254);
-	printf("%+2.3d\n", 0);
-	ft_printf("%+2.3d\n", 0);
-	printf("%+*.*i\n", 0, 0, 0);
-	ft_printf("%+*.*i\n", 0, 0, 0);
-	printf("%+8x\n", -62);
-	ft_printf("%+8x\n", -62);
-	printf("%+.16X\n", -21578);
-	ft_printf("%+.16X\n", -21578);
-	printf("%+15x\n", -42);
-	ft_printf("%+15x\n", -42);
-	printf("%+16.13X\n", -9587);
-	ft_printf("%+16.13X\n", -9587);
-	printf("%+-.8x\n", -9867);
-	ft_printf("%+-.8x\n", -9867);
-	printf("%+09.12X\n", -254);
-	ft_printf("%+09.12X\n", -254);
-	printf("%+2.3x\n", 0);
-	ft_printf("%+2.3x\n", 0);
-	printf("%+*.*X\n", 0, 0, 0);
-	ft_printf("%+*.*X\n", 0, 0, 0);
-}
-
+/*
 void	blank_test(void)
 {
 	printf("% 8u\n", 62);
@@ -1298,117 +1255,20 @@ void	blank_test(void)
 	printf("% *.*X\n", 0, 0, 0);
 	ft_printf("% *.*X\n", 0, 0, 0);
 }
+*/
 
-void	float_test(void)
-{
-	printf("%-8f\n", 0.7698765);
-	ft_printf("%-8f\n", 0.765);
-	printf("%+12.4f\n", 12.75);
-	ft_printf("%+12.4f\n", 12.75);
-	printf("%3.7f\n", -8766.54123);
-	ft_printf("%3.7f\n", -8766.54123);
-	printf("%010.7f\n", 8766.54123);
-	ft_printf("%010.7f\n", 8766.54123);
-	printf("%9.1f\n", -0.231);
-	ft_printf("%9.1f\n", -0.231);
-	printf("%-9f\n", 0.231);
-	ft_printf("%-9f\n", 0.231);
-	printf("% 2.3f\n", 55.7655);
-	ft_printf("% 2.3f\n", 55.7655);
-	printf("%#8.8f\n", -7652.123456);
-	ft_printf("%#8.8f\n", -7652.123456);
-	printf("%0.0f\n", 7652.123456);
-	ft_printf("%0.0f\n", 7652.123456);
-	printf("%.4f\n", 0.231);
-	ft_printf("%.4f\n", 0.231);
-}
-
-void	lmod_test(void)
-{
-	printf("%8lu\n", 62);
-	ft_printf("%8lu\n", 62);
-	printf("%.16hu\n", 21578);
-	ft_printf("%.16hu\n", 21578);
-	printf("%15llu\n", 42);
-	ft_printf("%15llu\n", 42);
-	printf("%16.13hhu\n", 9587);
-	ft_printf("%16.13hhu\n", 9587);
-	printf("%-.8hu\n", 9867);
-	ft_printf("%-.8hu\n", 9867);
-	printf("% 09.12llu\n", 254);
-	ft_printf("% 09.12llu\n", 254);
-	printf("%2.3llu\n", 0);
-	ft_printf("%2.3llu\n", 0);
-	printf("% *.*hhu\n", 0, 0, 0);
-	ft_printf("% *.*hhu\n", 0, 0, 0);
-	printf("% 8hhi\n", -62);
-	ft_printf("% 8hhi\n", -62);
-	printf("% .16hhd\n", 21578);
-	ft_printf("% .16hhd\n", 21578);
-	printf("% 15hhi\n", INT_MIN);
-	ft_printf("% 15hhi\n", INT_MIN);
-	printf("% 16.13lld\n", 9587);
-	ft_printf("% 16.13lld\n", 9587);
-	printf("% -4li\n", -9867);
-	ft_printf("% -4li\n", -9867);
-	printf("% 09.12hd\n", 254);
-	ft_printf("% 09.12hd\n", 254);
-	printf("% 2.3ld\n", 0);
-	ft_printf("% 2.3ld\n", 0);
-	printf("% *.*hi\n", 0, 0, 0);
-	ft_printf("% *.*hi\n", 0, 0, 0);
-	printf("% 8lx\n", -62);
-	ft_printf("% 8lx\n", -62);
-	printf("% .16llX\n", -21578);
-	ft_printf("% .16llX\n", -21578);
-	printf("% 15hhx\n", -42);
-	ft_printf("% 15hhx\n", -42);
-	printf("% 16.13hX\n", -9587);
-	ft_printf("% 16.13hX\n", -9587);
-	printf("% -.8hhx\n", -9867);
-	ft_printf("% -.8hhx\n", -9867);
-	printf("% 09.12lX\n", -254);
-	ft_printf("% 09.12lX\n", -254);
-	printf("% 2.3hx\n", 0);
-	ft_printf("% 2.3hx\n", 0);
-	printf("% *.*hX\n", 0, 0, 0);
-	ft_printf("% *.*hX\n", 0, 0, 0);
-	printf("%hc\n", 42);
-	ft_printf("%hc\n", 42);
-	printf("%lc\n", 4245);
-	ft_printf("%lc\n", 4245);
-	printf("%lc\n", 4278);
-	ft_printf("%lc\n", 4278);
-	printf("%hc\n", 4276);
-	ft_printf("%hc\n", 4276);
-	printf("%lc\n", 42123);
-	ft_printf("%lc\n", 42123);
-	printf("%-hc\n", 42);
-	ft_printf("%-hc\n", 42);
-	printf("%hc\n", 4209);
-	ft_printf("%hc\n", 4209);
-	printf("%lc\n", 1242);
-	ft_printf("%lc\n", 1242);
-	printf("%lc\n", 0, 9042);
-	ft_printf("%lc\n", 0, 9042);
-	printf("%hc\n", 4);
-	ft_printf("%hc\n", 4);
-	printf("{%3lc}\n", -0);
-	ft_printf("{%3lc}\n", -0);
-}
 int		main(void)
 {
 	char_test();
-//	str_test();
-//	ptr_test();
-//	uint_test();
+	str_test();
+	ptr_test();
+	uint_test();
 	int_test();
-//	hex_test();
-//	notype_test();
-//	count_test();
+	hex_test();
+	notype_test();
+	count_test();
 //	altflag_test();
 //	sign_test();
 //	blank_test();
 	return (0);
 }
-*/
