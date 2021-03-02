@@ -6,36 +6,40 @@
 #    By: maquentr <maquentr@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/03/02 13:05:22 by maquentr          #+#    #+#              #
-#    Updated: 2021/03/02 13:07:41 by maquentr         ###   ########.fr        #
+#    Updated: 2021/03/02 13:45:04 by maquentr         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
-
-NAME=printf
+NAME=libftprintf.a
 
 CC=gcc
 
-CFLAGS=-Wall -Wextra
+CFLAGS=-Wall -Wextra -Werror
 
 RM=rm -f
 
-INC=-I./ft_printf.h
+INC=ft_printf.h
 
 SRC=ft_printf.c
 
 OBJ=$(SRC:.c=.o)
 
 
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< $(INC)
+
 $(NAME): $(OBJ)
-		$(CC) $(CFLAGS) $(SRC) $(INC) -o $(NAME)
+	ar rcs	$(NAME)	$(OBJ)
 
 all: $(NAME)
 
+bonus:
+	@make	all	OBJ="$(OBJ)"
 
 clean:
 	$(RM) $(OBJ)
 
 fclean: clean
-	$(RM) $(NAME) 
+	$(RM) $(NAME)
 
 re: fclean all
 

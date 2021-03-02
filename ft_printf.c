@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/03/02 13:08:16 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/03/02 16:09:58 by maquentr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,6 +131,18 @@ int		ft_nb_digits(int d)
 	res++;
 	return (res);
 }
+
+int		ft_nb_dig(char *str)
+{
+	int i;
+
+	i = 0;
+	while ((str[i] >= '0' && str[i] <= '9') || str[i] == '-')
+		i++;
+	return (i);
+}
+
+
 
 static int		get_nb_size(int base, long long n)
 {
@@ -284,7 +296,7 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 		{
 			args->has_width = 1;
 			args->width = ft_atoi(itr);
-			itr += ft_nb_digits(args->width);
+			itr += ft_nb_dig(itr);
 		}
 		//.
 		if (*itr == '.')
@@ -304,9 +316,8 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 		{
 			if (args->has_star_prec == 0)
 			{
-				args->has_prec = 1;
 				args->prec = ft_atoi(itr);
-				itr += ft_nb_digits(args->prec);
+				itr += ft_nb_dig(itr);
 			}
 			else
 				itr += ft_nb_digits(ft_atoi(itr));
@@ -318,7 +329,6 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 			itr++;
 			return (itr);
 		}
-
 		itr++;
 	}
 	return (itr);
@@ -530,7 +540,7 @@ int		ft_put_s(t_args *args, va_list ap)
 	int len;
 	char *s;
 	int res;
-
+	
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
 	if (args->has_star_width){
@@ -545,7 +555,9 @@ int		ft_put_s(t_args *args, va_list ap)
 	len = ft_strlen(s);
 	if (args->has_prec)
 	{
-		if (len > precision)
+		if (precision == -1)
+			len = 0;
+		else if (len > precision)
 			len = precision;
 	}
 	res = 0;
@@ -600,11 +612,12 @@ int		ft_put_c(t_args *args, va_list ap)
 	return (res + ft_putchar(c + 0));
 }
 
-int		ft_put_percent(t_args *args, va_list ap)
+int		ft_put_pct(t_args *args, va_list ap)
 {
 	int width;
 	int res;
 	(void)ap;
+
 	width = args->has_width ? args->width : 0;
 	res = 0;
 	if (args->minus == 1)
@@ -626,8 +639,8 @@ int		ft_put_percent(t_args *args, va_list ap)
 		}
 	}
 	return (res + ft_putchar('%'));
-}
 
+}
 
 int		ft_put_u_zero(unsigned int u, int padding)
 {
@@ -822,7 +835,7 @@ int		ft_put_conv(t_args *args, va_list ap)
 	else if (args->c == 'X')
 		return ft_put_X(args, ap);
 	else if(args->c == '%')
-		return ft_put_percent(args, ap);
+		return ft_put_pct(args, ap);
 	return (0);
 }
 
@@ -853,11 +866,14 @@ int		ft_printf(const char *format, ...)
 	return (res);
 }
 
-
-
-
-
-
+/*
+int main()
+{
+	printf("[%09s]\n", "hi low");
+	ft_printf("[%09s]\n", "hi low");
+	return (0);
+}
+*/
 /*
 
 int main()
@@ -1033,7 +1049,6 @@ int main()
 
 	return (0);
 }
-*/
 
 
 
@@ -1203,7 +1218,6 @@ void	count_test(void)
 	ft_printf("%d68 erte4 6q8e4r %n -> %d\n", count2, &count2, count2);
 
 }
-/*
 void	blank_test(void)
 {
 	printf("% 8u\n", 62);
@@ -1255,7 +1269,6 @@ void	blank_test(void)
 	printf("% *.*X\n", 0, 0, 0);
 	ft_printf("% *.*X\n", 0, 0, 0);
 }
-*/
 
 int		main(void)
 {
@@ -1272,3 +1285,5 @@ int		main(void)
 //	blank_test();
 	return (0);
 }
+
+*/
