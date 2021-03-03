@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/03/03 17:13:29 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/03/03 21:57:43 by matt             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,13 +237,19 @@ int		ft_check_full_zero_long(t_args *args, long d)
 	return (0);
 }
 
-int		ft_ntm(t_args *args, int d)
+int		ft_ntm(t_args *args, int d) //permet d'afficher %.i avec i = 0
 {
 	if (!args->has_width && args->has_prec == 1 && args->prec == -1 && d == 0)
 		return (1);
 	return (0);
 }
 
+int		ft_ntm2(t_args *args, long d) //permet d'afficher %.i avec i = 0
+{
+	if (!args->has_width && args->has_prec == 1 && args->prec == -1 && d == 0)
+		return (1);
+	return (0);
+}
 void	init_args(t_args *args)
 {
 	args->c = 0;
@@ -475,7 +481,11 @@ int		ft_put_x(t_args *args, va_list ap)
 	char *tmp;
 	int padding;
 	int tg = 0;
+	int fdp;
 
+	fdp = 0;
+	if (args->has_width && args->has_prec && (args->prec == -1 || args->prec == 0))
+		fdp = 1; //pour %5.0i et 5.i   avec i = 0
 	base = "0123456789abcdef";
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
@@ -487,6 +497,8 @@ int		ft_put_x(t_args *args, va_list ap)
 	}
 	s = (long)va_arg(ap, void *);
 	if (ft_check_full_zero_long(args, s))
+		return (0);
+	if (ft_ntm2(args, s))
 		return (0);
 	tmp = ft_itoa_base(s, base);
 	len = ft_strlen(tmp);
@@ -504,8 +516,8 @@ int		ft_put_x(t_args *args, va_list ap)
 			res += ft_putchar('0');
 			tg++;
 		}
-		res += ft_putstrl(tmp, len);
-		while ((width - (tg + len)) > 0)
+		res += ft_putstrl(tmp, len + 1);
+		while ((width - (tg + len + 1)) > 0)
 		{
 			res += ft_putchar(' ');
 			width--;
@@ -521,21 +533,29 @@ int		ft_put_x(t_args *args, va_list ap)
 				res += ft_putchar(' ');
 				width--;
 			}
+			return (res + ft_putstr(tmp));
 		}
 		else if(!precision)
 		{
-			while ((width - len) > 0)
+			padding = len < width ? (width - len) : 0;
+			while (padding-- > 0)
+			{
+				res += ft_putchar('0');
+				tg++;
+			}
+			while ((width - (tg +len)) > 0)
 			{
 				res += ft_putchar(' ');
 				width--;
 			}
-		}
-		while (padding-- > 0)
-		{
-			res += ft_putchar('0');
+			return (res + ft_putstr(tmp));
 		}
 	}
-
+	while (width - len > 1)
+	{
+		res += ft_putchar (' ');
+		width--;
+	}
 	return (res + ft_putstr(tmp));
 }
 
@@ -668,17 +688,16 @@ int		ft_put_pct(t_args *args, va_list ap)
 
 // ------------ uuuuuuuuu -------------
 
-int		ft_put_u_zero(int d, int padding, int fdp)
+int		ft_put_u_zero(unsigned int d, int padding, int fdp)
 {
 	int res;
 
 	res = 0;
-	if (d == -2147483648)
+	if (d == 4294967295)
 	{
-		res += ft_putchar('-');
 		while (padding-- > 0)
 			res += ft_putchar('0');
-		res += ft_putstr("2147483648");
+		res += ft_putstr("4294967295");
 		return (res);
 	}
 	while (padding-- > 0)
@@ -696,7 +715,7 @@ int		ft_put_u(t_args *args, va_list ap)
 {
 	int width;
 	int precision;
-	int d;
+	unsigned int d;
 	int len;
 	int padding;
 	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
@@ -806,7 +825,7 @@ int		ft_put_u(t_args *args, va_list ap)
    }
    return (res + ft_put_u_zero(u, padding));
    }
-   */
+ */
 
 
 // ------------ dddddddd -------------
@@ -876,7 +895,7 @@ width--;
 }
 return (res + ft_put_d_zero(d, padding));
 }
-*/
+ */
 
 
 int		ft_put_d_zero(int d, int padding, int fdp)
@@ -1137,51 +1156,72 @@ int		ft_printf(const char *format, ...)
 	return (res);
 }
 
-/*
 
-   int main()
-   {
-   printf("[%010.5i]\n", -216);
-   ft_printf("[%010.5i]\n", -216);
-   printf("[%07i]\n", -216);
-   ft_printf("[%07i]\n", -216);
-   printf("[%08.5i]\n", 0);
-   ft_printf("[%08.5i]\n", 0);
-   printf("[%08.3i]\n", 8375);
-   ft_printf("[%08.3i]\n", 8375);
-   printf("[%0-8.5i]\n", 34);
-   ft_printf("[%0-8.5i]\n", 34);
-   printf("[%0-10.5i]\n", -216);
-   ft_printf("[%0-10.5i]\n", -216);
-   printf("[%0-8.5i]\n", 0);
-   ft_printf("[%0-8.5i]\n", 0);
-   printf("[%.0i]\n", 0);
-   ft_printf("[%.0i]\n", 0);
-   printf("[%3i]\n", 0);
-   ft_printf("[%3i]\n", 0);
-   printf("[%i]\n", 0);
-   ft_printf("[%i]\n", 0);
-   printf("[%3i]\n", 0);
-   ft_printf("[%3i]\n", 0);
-   printf("[%-3i]\n", 0);
-   ft_printf("[%-3i]\n", 0);
-   printf("[%.3i]\n", 0);
-   ft_printf("[%.3i]\n", 0);
-   printf("[%03i]\n", 0);
-   ft_printf("[%03i]\n", 0);
-   printf("[%8.5i]\n", 0);
-   ft_printf("[%8.5i]\n", 0);
-   printf("[%.i]\n", 0);
-   ft_printf("[%.i]\n", 0);
-   printf("[%5.0i]\n", 0);
-   ft_printf("[%5.0i]\n", 0);
-   printf("[%5.i]\n", 0);
-   ft_printf("[%5.i]\n", 0);
-   return (0);
-   }
+int main()
+{
+	printf("[%010.5i]\n", -216);
+	ft_printf("[%010.5i]\n", -216);
+	printf("[%07i]\n", -216);
+	ft_printf("[%07i]\n", -216);
+	printf("[%08.5i]\n", 0);
+	ft_printf("[%08.5i]\n", 0);
+	printf("[%08.3i]\n", 8375);
+	ft_printf("[%08.3i]\n", 8375);
+	printf("[%0-8.5i]\n", 34);
+	ft_printf("[%0-8.5i]\n", 34);
+	printf("[%0-10.5i]\n", -216);
+	ft_printf("[%0-10.5i]\n", -216);
+	printf("[%0-8.5i]\n", 0);
+	ft_printf("[%0-8.5i]\n", 0);
+	printf("[%.0i]\n", 0);
+	ft_printf("[%.0i]\n", 0);
+	printf("[%3i]\n", 0);
+	ft_printf("[%3i]\n", 0);
+	printf("[%i]\n", 0);
+	ft_printf("[%i]\n", 0);
+	printf("[%3i]\n", 0);
+	ft_printf("[%3i]\n", 0);
+	printf("[%-3i]\n", 0);
+	ft_printf("[%-3i]\n", 0);
+	printf("[%.3i]\n", 0);
+	ft_printf("[%.3i]\n", 0);
+	printf("[%03i]\n", 0);
+	ft_printf("[%03i]\n", 0);
+	printf("[%8.5i]\n", 0);
+	ft_printf("[%8.5i]\n", 0);
+	printf("[%.i]\n", 0);
+	ft_printf("[%.i]\n", 0);
+	printf("[%5.0i]\n", 0);
+	ft_printf("[%5.0i]\n", 0);
+	printf("[%5.i]\n", 0);
+	ft_printf("[%5.i]\n", 0);
+	printf("[%u]\n", 4294967295u);
+	ft_printf("[%u]\n", 4294967295u);
+	printf("[%05x]\n", 43);
+	ft_printf("[%05x]\n", 43);
+	printf("[%03x]\n", 0);
+	ft_printf("[%03x]\n", 0);
+	printf("[%8.3x]\n", 8375);
+	ft_printf("[%8.3x]\n", 8375);
+	printf("[%-8.3x]\n", 8375);
+	ft_printf("[%-8.3x]\n", 8375);
+	printf("[%-3.3x]\n", 6983);
+	ft_printf("[%-3.3x]\n", 6983);
+	printf("[%08.3x]\n", 8375);
+	ft_printf("[%08.3x]\n", 8375);
+	printf("[%0-8.3x]\n", 8375);
+	ft_printf("[%0-8.3x]\n", 8375);
+	printf("[%0.x]\n", 0);
+	ft_printf("[%0.x]\n", 0);
+	printf("[%5.0x]\n", 0);
+	ft_printf("[%5.0x]\n", 0);
+	printf("[%7x]\n", 33);
+	ft_printf("[%7x]\n", 33);
 
-*/
 
+
+	return (0);
+}
 
 /*
 
