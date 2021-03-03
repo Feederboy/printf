@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/03/02 16:09:58 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/03/03 17:13:29 by maquentr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -225,16 +225,21 @@ char			*ft_itoa_base(long n, char *base)
 
 int		ft_check_full_zero(t_args *args, int d)
 {
-	if ((!args->width && !args->prec && !d) || (!args->star_width &&
-			!args->star_prec && !d))
+	if ((args->width == -1 && args->prec == 0 && d == 0) || (!args->star_width &&	!args->star_prec && d == 0))
 		return (1);
 	return (0);
 }
 
 int		ft_check_full_zero_long(t_args *args, long d)
 {
-	if ((!args->width && !args->prec && !d) || (!args->star_width &&
-			!args->star_prec && !d))
+	if ((args->width == -1 && args->prec == 0 && d == 0) || (!args->star_width &&	!args->star_prec && d == 0))
+		return (1);
+	return (0);
+}
+
+int		ft_ntm(t_args *args, int d)
+{
+	if (!args->has_width && args->has_prec == 1 && args->prec == -1 && d == 0)
 		return (1);
 	return (0);
 }
@@ -255,7 +260,7 @@ void	init_args(t_args *args)
 	args->star_prec = -1;
 	args-> res = 0;
 	args->percent = 0;
-	
+
 }
 
 char	*read_args(t_args *args, char *itr, va_list ap)
@@ -266,10 +271,18 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 	while (*itr)
 	{
 		init_args(args);
+		//zero
+		if (*itr == '0')
+		{
+			args->zero = 1;
+			itr++;
+		}
 		//minus
 		if (*itr == '-')
 		{
 			args->minus = 1;
+			if (args->zero)
+				args->zero = 0;
 			itr++;
 		}
 		// * width
@@ -277,18 +290,6 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 		{
 			args->has_star_width = 1;
 			args->star_width = va_arg(ap, int);
-			itr++;
-		}
-		//zero
-		if (*itr == '0')
-		{
-			args->has_zero = 1;
-			args->zero = 1;
-			if (args->minus == 1)
-			{
-				args->has_zero = 0;
-				args->zero = 0;
-			}
 			itr++;
 		}
 		//widt ---- if there's no *width before
@@ -333,6 +334,8 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 	}
 	return (itr);
 }
+
+//--------- PPPPPPP ---------------
 
 int		ft_put_p(t_args *args, va_list ap)
 {
@@ -382,6 +385,8 @@ int		ft_put_p(t_args *args, va_list ap)
 	return (res + ft_putstrl(tmp, len));
 }
 
+// -----------  XXXXXXXX --------------
+
 int		ft_put_X(t_args *args, va_list ap)
 {
 	int width;
@@ -405,7 +410,7 @@ int		ft_put_X(t_args *args, va_list ap)
 	}
 	s = (long)va_arg(ap, void *);
 	if (ft_check_full_zero_long(args, s))
-			return (0);
+		return (0);
 	tmp = ft_itoa_base(s, base);
 	len = ft_strlen(tmp);
 	padding = len < precision ? (precision - len) : 0;
@@ -457,6 +462,8 @@ int		ft_put_X(t_args *args, va_list ap)
 	return (res + ft_putstr(tmp));
 }
 
+// ---------- xxxxxxxxxxxx --------------
+
 int		ft_put_x(t_args *args, va_list ap)
 {
 	int width;
@@ -480,7 +487,7 @@ int		ft_put_x(t_args *args, va_list ap)
 	}
 	s = (long)va_arg(ap, void *);
 	if (ft_check_full_zero_long(args, s))
-			return (0);
+		return (0);
 	tmp = ft_itoa_base(s, base);
 	len = ft_strlen(tmp);
 	padding = len < precision ? (precision - len) : 0;
@@ -532,6 +539,7 @@ int		ft_put_x(t_args *args, va_list ap)
 	return (res + ft_putstr(tmp));
 }
 
+// ----------- sssssssss ------------
 
 int		ft_put_s(t_args *args, va_list ap)
 {
@@ -540,7 +548,7 @@ int		ft_put_s(t_args *args, va_list ap)
 	int len;
 	char *s;
 	int res;
-	
+
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
 	if (args->has_star_width){
@@ -582,6 +590,8 @@ int		ft_put_s(t_args *args, va_list ap)
 	return (res + ft_putstrl(s, len));
 }
 
+// ----------- cccccccccc ----------------
+
 int		ft_put_c(t_args *args, va_list ap)
 {
 	int width;
@@ -612,6 +622,9 @@ int		ft_put_c(t_args *args, va_list ap)
 	return (res + ft_putchar(c + 0));
 }
 
+// ----------- ppppcccccctttttt ----------
+
+
 int		ft_put_pct(t_args *args, va_list ap)
 {
 	int width;
@@ -632,64 +645,30 @@ int		ft_put_pct(t_args *args, va_list ap)
 	}
 	else
 	{
-		while (width > 1)
+		if (args->zero)
 		{
-			res += ft_putchar(' ');
-			width--;
+			while (width > 1)
+			{
+				res += ft_putchar('0');
+				width--;
+			}
+		}
+		else
+		{
+			while (width > 1)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
 		}
 	}
 	return (res + ft_putchar('%'));
 
 }
 
-int		ft_put_u_zero(unsigned int u, int padding)
-{
-	int res;
+// ------------ uuuuuuuuu -------------
 
-	res = 0;
-	while (padding-- > 0)
-		res += ft_putchar('0');
-	if (u / 10)
-		res += ft_put_u_zero(u / 10, padding);
-	res += ft_putchar((u % 10) + '0');
-	return (res);
-}
-		
-int		ft_put_u(t_args *args, va_list ap)
-{
-	int width;
-	int precision;
-	unsigned int u;
-	int len;
-	int padding;
-	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
-	
-	
-	width = args->has_width ? args->width : 0;
-	precision = args->has_prec ? args->prec : 0;
-	if (args->has_star_width){
-		width = args->has_star_width ? args->star_width : 0;
-	}
-	if (args->has_star_prec){
-		precision = args->has_star_prec ? args->star_prec : 0;
-	}
-	u = va_arg(ap, int);
-	if (ft_check_full_zero(args, u))
-		return (0);
-	len = ft_nb_digits(u);
-	res = 0;
-	padding = len < precision ? (precision - len) : 0;
-	len += padding;
-	while ((width - len) > 0)
-	{
-		res += ft_putchar(' ');
-		width--;
-	}
-	return (res + ft_put_u_zero(u, padding));
-}
-
-
-int		ft_put_d_zero(int d, int padding)
+int		ft_put_u_zero(int d, int padding, int fdp)
 {
 	int res;
 
@@ -702,22 +681,18 @@ int		ft_put_d_zero(int d, int padding)
 		res += ft_putstr("2147483648");
 		return (res);
 	}
-	if (d < 0)
-	{
-		res += ft_putchar('-');
-		d *= -1;
-	}
 	while (padding-- > 0)
 		res += ft_putchar('0');
 	if (d / 10)
-		res += ft_put_d_zero(d / 10, padding);
-	res += ft_putchar((d % 10) + '0');
+		res += ft_put_u_zero(d / 10, padding, fdp);
+	if (fdp == 0)
+		res += ft_putchar((d % 10) + '0');
+	else
+		res += ft_putchar(' ');
 	return (res);
 }
 
-
-//GERER LE ZERO VIA STRUCT AINSI QUE LETOILE POUR LE NOMBRE DE WIDTH
-int		ft_put_d(t_args *args, va_list ap)
+int		ft_put_u(t_args *args, va_list ap)
 {
 	int width;
 	int precision;
@@ -725,8 +700,11 @@ int		ft_put_d(t_args *args, va_list ap)
 	int len;
 	int padding;
 	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
-	
+	int fdp;
 
+	fdp = 0;
+	if (args->has_width && args->has_prec && (args->prec == -1 || args->prec == 0))
+		fdp = 1; //pour %5.0i et 5.i   avec i = 0
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
 	if (args->has_star_width){
@@ -737,23 +715,171 @@ int		ft_put_d(t_args *args, va_list ap)
 	}
 	d = va_arg(ap, int);
 	if (ft_check_full_zero(args, d))
-			return (0);
+		return (0);
+	if (ft_ntm(args, d))
+		return (0);
 	len = ft_nb_digits(d);
 	res = 0;
-	if (d < 0)
-		padding = (len - 1) < precision ? (precision - (len - 1)) : 0;
-	else
-		padding = len < precision ? (precision - len) : 0;
+	padding = len < precision ? (precision - len) : 0;
 	len += padding;
+	if (args->zero)
+	{
+		if (args->has_prec)
+		{
+			while ((width - len) > 0)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
+			res += ft_put_u_zero(d, padding, fdp);
+			return (res);
+		}
+		else
+		{
+			padding = len < width ? (width - len) : 0;
+			res += ft_put_u_zero(d, padding, fdp);
+			return (res);
+		}
+	}
+	if (args->minus)
+	{
+		res += ft_put_u_zero(d, padding, fdp);
+		while ((width - len) > 0)
+		{
+			res += ft_putchar(' ');
+			width--;
+		}
+		return (res);
+	}
 	while ((width - len) > 0)
 	{
 		res += ft_putchar(' ');
 		width--;
 	}
-	return (res + ft_put_d_zero(d, padding));
+	return (res + ft_put_u_zero(d, padding, fdp));
 }
 
-int		ft_put_i_zero(int d, int padding)
+
+/*
+   int		ft_put_u_zero(unsigned int u, int padding)
+   {
+   int res;
+
+   res = 0;
+   while (padding-- > 0)
+   res += ft_putchar('0');
+   if (u / 10)
+   res += ft_put_u_zero(u / 10, padding);
+   res += ft_putchar((u % 10) + '0');
+   return (res);
+   }
+
+   int		ft_put_u(t_args *args, va_list ap)
+   {
+   int width;
+   int precision;
+   unsigned int u;
+   int len;
+   int padding;
+   int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
+
+
+   width = args->has_width ? args->width : 0;
+   precision = args->has_prec ? args->prec : 0;
+   if (args->has_star_width){
+   width = args->has_star_width ? args->star_width : 0;
+   }
+   if (args->has_star_prec){
+   precision = args->has_star_prec ? args->star_prec : 0;
+   }
+   u = va_arg(ap, int);
+   if (ft_check_full_zero(args, u))
+   return (0);
+   len = ft_nb_digits(u);
+   res = 0;
+   padding = len < precision ? (precision - len) : 0;
+   len += padding;
+   while ((width - len) > 0)
+   {
+   res += ft_putchar(' ');
+   width--;
+   }
+   return (res + ft_put_u_zero(u, padding));
+   }
+   */
+
+
+// ------------ dddddddd -------------
+
+
+/*
+   int		ft_put_d_zero(int d, int padding)
+   {
+   int res;
+
+   res = 0;
+   if (d == -2147483648)
+   {
+   res += ft_putchar('-');
+   while (padding-- > 0)
+   res += ft_putchar('0');
+   res += ft_putstr("2147483648");
+   return (res);
+   }
+   if (d < 0)
+   {
+   res += ft_putchar('-');
+   d *= -1;
+   }
+   while (padding-- > 0)
+   res += ft_putchar('0');
+   if (d / 10)
+   res += ft_put_d_zero(d / 10, padding);
+   res += ft_putchar((d % 10) + '0');
+   return (res);
+   }
+
+
+//GERER LE ZERO VIA STRUCT AINSI QUE LETOILE POUR LE NOMBRE DE WIDTH
+int		ft_put_d(t_args *args, va_list ap)
+{
+int width;
+int precision;
+int d;
+int len;
+int padding;
+int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
+
+
+width = args->has_width ? args->width : 0;
+precision = args->has_prec ? args->prec : 0;
+if (args->has_star_width){
+width = args->has_star_width ? args->star_width : 0;
+}
+if (args->has_star_prec){
+precision = args->has_star_prec ? args->star_prec : 0;
+}
+d = va_arg(ap, int);
+if (ft_check_full_zero(args, d))
+return (0);
+len = ft_nb_digits(d);
+res = 0;
+if (d < 0)
+padding = (len - 1) < precision ? (precision - (len - 1)) : 0;
+else
+padding = len < precision ? (precision - len) : 0;
+len += padding;
+while ((width - len) > 0)
+{
+res += ft_putchar(' ');
+width--;
+}
+return (res + ft_put_d_zero(d, padding));
+}
+*/
+
+
+int		ft_put_d_zero(int d, int padding, int fdp)
 {
 	int res;
 
@@ -774,8 +900,116 @@ int		ft_put_i_zero(int d, int padding)
 	while (padding-- > 0)
 		res += ft_putchar('0');
 	if (d / 10)
-		res += ft_put_d_zero(d / 10, padding);
-	res += ft_putchar((d % 10) + '0');
+		res += ft_put_d_zero(d / 10, padding, fdp);
+	if (fdp == 0)
+		res += ft_putchar((d % 10) + '0');
+	else
+		res += ft_putchar(' ');
+	return (res);
+}
+
+int		ft_put_d(t_args *args, va_list ap)
+{
+	int width;
+	int precision;
+	int d;
+	int len;
+	int padding;
+	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
+	int fdp;
+
+	fdp = 0;
+	if (args->has_width && args->has_prec && (args->prec == -1 || args->prec == 0))
+		fdp = 1; //pour %5.0i et 5.i   avec i = 0
+	width = args->has_width ? args->width : 0;
+	precision = args->has_prec ? args->prec : 0;
+	if (args->has_star_width){
+		width = args->has_star_width ? args->star_width : 0;
+	}
+	if (args->has_star_prec){
+		precision = args->has_star_prec ? args->star_prec : 0;
+	}
+	d = va_arg(ap, int);
+	if (ft_check_full_zero(args, d))
+		return (0);
+	if (ft_ntm(args, d))
+		return (0);
+	len = ft_nb_digits(d);
+	res = 0;
+	if (d < 0)
+		padding = (len - 1) < precision ? (precision - (len - 1)) : 0;
+	else
+		padding = len < precision ? (precision - len) : 0;
+	len += padding;
+	if (args->zero)
+	{
+		if (args->has_prec)
+		{
+			while ((width - len) > 0)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
+			res += ft_put_d_zero(d, padding, fdp);
+			return (res);
+		}
+		else
+		{
+			if (d < 0)
+				padding = (len - 1) < width ? (width - (len)) : 0;
+			else
+				padding = len < width ? (width - len) : 0;
+			res += ft_put_d_zero(d, padding, fdp);
+			return (res);
+		}
+	}
+	if (args->minus)
+	{
+		res += ft_put_d_zero(d, padding, fdp);
+		while ((width - len) > 0)
+		{
+			res += ft_putchar(' ');
+			width--;
+		}
+		return (res);
+	}
+	while ((width - len) > 0)
+	{
+		res += ft_putchar(' ');
+		width--;
+	}
+	return (res + ft_put_d_zero(d, padding, fdp));
+}
+
+
+// ----------- iiiiiiiiiii ---------
+
+int		ft_put_i_zero(int d, int padding, int fdp)
+{
+	int res;
+
+	res = 0;
+	if (d == -2147483648)
+	{
+		res += ft_putchar('-');
+		while (padding-- > 0)
+			res += ft_putchar('0');
+		res += ft_putstr("2147483648");
+		return (res);
+	}
+	if (d < 0)
+	{
+		res += ft_putchar('-');
+		d *= -1;
+	}
+	while (padding-- > 0)
+		res += ft_putchar('0');
+	if (d / 10)
+		res += ft_put_i_zero(d / 10, padding, fdp);
+	if (fdp == 0)
+		res += ft_putchar((d % 10) + '0');
+	else
+		res += ft_putchar(' ');
 	return (res);
 }
 
@@ -787,8 +1021,11 @@ int		ft_put_i(t_args *args, va_list ap)
 	int len;
 	int padding;
 	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
-	
+	int fdp;
 
+	fdp = 0;
+	if (args->has_width && args->has_prec && (args->prec == -1 || args->prec == 0))
+		fdp = 1; //pour %5.0i et 5.i   avec i = 0
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
 	if (args->has_star_width){
@@ -799,7 +1036,9 @@ int		ft_put_i(t_args *args, va_list ap)
 	}
 	d = va_arg(ap, int);
 	if (ft_check_full_zero(args, d))
-			return (0);
+		return (0);
+	if (ft_ntm(args, d))
+		return (0);
 	len = ft_nb_digits(d);
 	res = 0;
 	if (d < 0)
@@ -807,12 +1046,44 @@ int		ft_put_i(t_args *args, va_list ap)
 	else
 		padding = len < precision ? (precision - len) : 0;
 	len += padding;
+	if (args->zero)
+	{
+		if (args->has_prec)
+		{
+			while ((width - len) > 0)
+			{
+				res += ft_putchar(' ');
+				width--;
+			}
+			res += ft_put_i_zero(d, padding, fdp);
+			return (res);
+		}
+		else
+		{
+			if (d < 0)
+				padding = (len - 1) < width ? (width - (len)) : 0;
+			else
+				padding = len < width ? (width - len) : 0;
+			res += ft_put_i_zero(d, padding, fdp);
+			return (res);
+		}
+	}
+	if (args->minus)
+	{
+		res += ft_put_i_zero(d, padding, fdp);
+		while ((width - len) > 0)
+		{
+			res += ft_putchar(' ');
+			width--;
+		}
+		return (res);
+	}
 	while ((width - len) > 0)
 	{
 		res += ft_putchar(' ');
 		width--;
 	}
-	return (res + ft_put_d_zero(d, padding));
+	return (res + ft_put_i_zero(d, padding, fdp));
 }
 
 
@@ -867,187 +1138,225 @@ int		ft_printf(const char *format, ...)
 }
 
 /*
-int main()
-{
-	printf("[%09s]\n", "hi low");
-	ft_printf("[%09s]\n", "hi low");
-	return (0);
-}
+
+   int main()
+   {
+   printf("[%010.5i]\n", -216);
+   ft_printf("[%010.5i]\n", -216);
+   printf("[%07i]\n", -216);
+   ft_printf("[%07i]\n", -216);
+   printf("[%08.5i]\n", 0);
+   ft_printf("[%08.5i]\n", 0);
+   printf("[%08.3i]\n", 8375);
+   ft_printf("[%08.3i]\n", 8375);
+   printf("[%0-8.5i]\n", 34);
+   ft_printf("[%0-8.5i]\n", 34);
+   printf("[%0-10.5i]\n", -216);
+   ft_printf("[%0-10.5i]\n", -216);
+   printf("[%0-8.5i]\n", 0);
+   ft_printf("[%0-8.5i]\n", 0);
+   printf("[%.0i]\n", 0);
+   ft_printf("[%.0i]\n", 0);
+   printf("[%3i]\n", 0);
+   ft_printf("[%3i]\n", 0);
+   printf("[%i]\n", 0);
+   ft_printf("[%i]\n", 0);
+   printf("[%3i]\n", 0);
+   ft_printf("[%3i]\n", 0);
+   printf("[%-3i]\n", 0);
+   ft_printf("[%-3i]\n", 0);
+   printf("[%.3i]\n", 0);
+   ft_printf("[%.3i]\n", 0);
+   printf("[%03i]\n", 0);
+   ft_printf("[%03i]\n", 0);
+   printf("[%8.5i]\n", 0);
+   ft_printf("[%8.5i]\n", 0);
+   printf("[%.i]\n", 0);
+   ft_printf("[%.i]\n", 0);
+   printf("[%5.0i]\n", 0);
+   ft_printf("[%5.0i]\n", 0);
+   printf("[%5.i]\n", 0);
+   ft_printf("[%5.i]\n", 0);
+   return (0);
+   }
+
 */
+
+
 /*
 
-int main()
-{
-	printf("\n\n\n S \n\n\n");
-	ft_printf("hoge\n");
-	ft_printf("[%s]\n", "hoge");
-	ft_printf("[%10.5s]\n", "hoge");
-	ft_printf("[%10.2s]\n", "hoge");
-	ft_printf("[%3.2s]\n", "hoge");
-	ft_printf("[%3.10s]\n", "hoge");
-	ft_printf("[%10.0s]\n", "hoge");
+   int main()
+   {
+   printf("\n\n\n S \n\n\n");
+   ft_printf("hoge\n");
+   ft_printf("[%s]\n", "hoge");
+   ft_printf("[%10.5s]\n", "hoge");
+   ft_printf("[%10.2s]\n", "hoge");
+   ft_printf("[%3.2s]\n", "hoge");
+   ft_printf("[%3.10s]\n", "hoge");
+   ft_printf("[%10.0s]\n", "hoge");
 
 
-	
-	printf("C \n\n\n");
 
-	ft_printf("[%c]\n", 'a');
-	ft_printf("[%10c]\n", 'a');
-	ft_printf("[%3c]\n", 'a');
-	ft_printf("[%5c]\n", 'a');
-	
-	ft_printf("\n\n\nS NULL\n\n");
-	
-	ft_printf("[%s]\n", NULL);
-	ft_printf("[%10.5s]\n", NULL);
-	ft_printf("[%10.2s]\n", NULL);
-	ft_printf("[%3.2s]\n", NULL);
-	ft_printf("[%3.10s]\n", NULL);
-	ft_printf("[%10.0s]\n", NULL);
+   printf("C \n\n\n");
 
+   ft_printf("[%c]\n", 'a');
+   ft_printf("[%10c]\n", 'a');
+   ft_printf("[%3c]\n", 'a');
+   ft_printf("[%5c]\n", 'a');
 
-	printf("D \n\n\n");
+   ft_printf("\n\n\nS NULL\n\n");
 
-	ft_printf("[%05d]\n", 0);
-	ft_printf("[%05d]\n", -7);
-	ft_printf("[%05d]\n", 123456789);
-	ft_printf("[%05d]\n", -203435);
-	ft_printf("[%05d]\n", -203435);
-	ft_printf("[%05d]\n", -203435);
-	ft_printf("[%3.2d]\n", 203435);
-	
-	printf("\n\n\nTRUE PRINTF\n\n");
-	
-	printf("\n\n\n S \n\n\n");
-	printf("[%s]\n", "hoge");
-	printf("[%10.5s]\n", "hoge");
-	printf("[%10.2s]\n", "hoge");
-	printf("[%3.2s]\n", "hoge");
-	printf("[%3.10s]\n", "hoge");
-	printf("[%10.0s]\n", "hoge");
-
-	printf("\n\n\n C \n\n\n");
-
-	printf("[%c]\n", 'a');
-	printf("[%10c]\n", 'a');
-	printf("[%3c]\n", 'a');
-	printf("[%5c]\n", 'a');
-	
-	printf("\n\n\nS NULL\n\n");
-	
-	printf("[%s]\n", NULL);
-	printf("[%10.5s]\n", NULL);
-	printf("[%10.2s]\n", NULL);
-	printf("[%3.2s]\n", NULL);
-	printf("[%3.10s]\n", NULL);
-	printf("[%10.0s]\n", NULL);
-
-	printf("\n\n\nRANDOM TESTS\n\n");
-	
-	printf("[%-*.*s]\n", 25, 10 , "jeanmichel");
-	printf("[%5.d]\n", 25);
-	
-	ft_printf("[%8d]\n", -62);
-	ft_printf("[%09.12d]\n", 254);
-	printf("[%09.12d]\n", 254);
-
-	printf("\n\n\nTEST DDDDDDDD\n\n\n");
+   ft_printf("[%s]\n", NULL);
+   ft_printf("[%10.5s]\n", NULL);
+   ft_printf("[%10.2s]\n", NULL);
+   ft_printf("[%3.2s]\n", NULL);
+   ft_printf("[%3.10s]\n", NULL);
+   ft_printf("[%10.0s]\n", NULL);
 
 
-	printf("PRINT[%8d]\n", -62);
-	ft_printf("   FT[%8d]\n", -62);
-	printf("PRINT[%.16d]\n", -21578);
-	ft_printf("   FT[%.16d]\n", -21578);
-	printf("PRINT[%15ld]\n", -2147483648);
-	ft_printf("   FT[%15d]\n", -2147483648);
-	printf("PRINT[%16.13d]\n", -9587);
-	ft_printf("   FT[%16.13d]\n", -9587);
-	printf("PRINT[%-.8d]\n", -9867);
-	ft_printf("   FT[%-.8d]\n", -9867);
-	printf("PRINT[%09.12d]\n", -254);
-	ft_printf("   FT[%09.12d]\n", -254);
-	printf("PRINT[%2.3d]\n", 0);
-	ft_printf("   ft[%2.3d]\n", 0);
-	printf("PRINT[%*.*d]\n", 5, 3, 12);
-	ft_printf("   FT[%*.*d]\n", 5, 3, 12);
-	printf("PRINT[%*.*d]\n", 0, 0, 0);
-	ft_printf("   FT[%*.*d]\n", 0, 0, 0);
+   printf("D \n\n\n");
+
+   ft_printf("[%05d]\n", 0);
+   ft_printf("[%05d]\n", -7);
+   ft_printf("[%05d]\n", 123456789);
+   ft_printf("[%05d]\n", -203435);
+   ft_printf("[%05d]\n", -203435);
+   ft_printf("[%05d]\n", -203435);
+   ft_printf("[%3.2d]\n", 203435);
+
+   printf("\n\n\nTRUE PRINTF\n\n");
+
+   printf("\n\n\n S \n\n\n");
+   printf("[%s]\n", "hoge");
+   printf("[%10.5s]\n", "hoge");
+   printf("[%10.2s]\n", "hoge");
+   printf("[%3.2s]\n", "hoge");
+   printf("[%3.10s]\n", "hoge");
+   printf("[%10.0s]\n", "hoge");
+
+   printf("\n\n\n C \n\n\n");
+
+   printf("[%c]\n", 'a');
+   printf("[%10c]\n", 'a');
+   printf("[%3c]\n", 'a');
+   printf("[%5c]\n", 'a');
+
+   printf("\n\n\nS NULL\n\n");
+
+   printf("[%s]\n", NULL);
+   printf("[%10.5s]\n", NULL);
+   printf("[%10.2s]\n", NULL);
+   printf("[%3.2s]\n", NULL);
+   printf("[%3.10s]\n", NULL);
+   printf("[%10.0s]\n", NULL);
+
+   printf("\n\n\nRANDOM TESTS\n\n");
+
+   printf("[%-*.*s]\n", 25, 10 , "jeanmichel");
+printf("[%5.d]\n", 25);
+
+ft_printf("[%8d]\n", -62);
+ft_printf("[%09.12d]\n", 254);
+printf("[%09.12d]\n", 254);
+
+printf("\n\n\nTEST DDDDDDDD\n\n\n");
 
 
-	
-	printf("\n\n\nTEST PTR\n\n\n");
-	
-	
-	char	*str = "Ceci est un test.";
-	
-	ft_printf("   FT[%p]\n", str);
-	printf("PRINT[%p]\n", str);
-	ft_printf("   FT[%8p]\n", str);
-	printf("PRINT[%8p]\n", str);
-	ft_printf("   FT[%16p]\n", str);
-	printf("PRINT[%16p]\n", str);
-	ft_printf("   FT[%15p]\n", str);
-	printf("PRINT[%15p]\n", str);
-	ft_printf("   FT[%-15p]\n", str);
-	printf("PRINT[%-15p]\n", str);
-	ft_printf("   FT[%16p]\n", str);
-	printf("PRINT[%16p]\n", str);
-	ft_printf("   FT[%9p]\n", str);
-	printf("PRINT[%9p]\n", str);
-	ft_printf("   FT[%p]\n", NULL);
-	printf("PRINT[%p]\n", NULL);
-	ft_printf("   FT[%2p]\n", NULL);
-	printf("PRINT[%2p]\n", NULL);
-	ft_printf("   FT[%*p]\n", 0, NULL);
-	printf("PRINT[%*p]\n", 0, NULL);
+printf("PRINT[%8d]\n", -62);
+ft_printf("   FT[%8d]\n", -62);
+printf("PRINT[%.16d]\n", -21578);
+ft_printf("   FT[%.16d]\n", -21578);
+printf("PRINT[%15ld]\n", -2147483648);
+ft_printf("   FT[%15d]\n", -2147483648);
+printf("PRINT[%16.13d]\n", -9587);
+ft_printf("   FT[%16.13d]\n", -9587);
+printf("PRINT[%-.8d]\n", -9867);
+ft_printf("   FT[%-.8d]\n", -9867);
+printf("PRINT[%09.12d]\n", -254);
+ft_printf("   FT[%09.12d]\n", -254);
+printf("PRINT[%2.3d]\n", 0);
+ft_printf("   ft[%2.3d]\n", 0);
+printf("PRINT[%*.*d]\n", 5, 3, 12);
+ft_printf("   FT[%*.*d]\n", 5, 3, 12);
+printf("PRINT[%*.*d]\n", 0, 0, 0);
+ft_printf("   FT[%*.*d]\n", 0, 0, 0);
 
 
-	printf("\n\n\nTEST HEX\n\n\n");
 
-	printf("PRINTF[%8x]\n", -62);
-	ft_printf("    FT[%8x]\n", -62);
-	printf("PRINTF[%.16X]\n", -21578);
-	ft_printf("    FT[%.16X]\n", -21578);
-	printf("PRINTF[%15x]\n", -42);
-	ft_printf("    FT[%15x]\n", -42);
-	printf("PRINTF[%16.13X]\n", -9587);
-	ft_printf("    FT[%16.13X]\n", -9587);
-	printf("PRINTF[%-.8x]\n", -9867);
-	ft_printf("    FT[%-.8x]\n", -9867);
-	printf("PRINT[%09.12X]\n", -254);
-	ft_printf("   FT[%09.12X]\n", -254);
-	printf("PRINTF[%2.3x]\n", 0);
-	ft_printf("    FT[%2.3x]\n", 0);
-	printf("PRINT[%*.*X]\n", 3, 2, 246688);
-	ft_printf("   FT[%*.*X]\n", 3, 2, 246688);
-	printf("PRINTF[%-16.13X]\n", -9587);
-	ft_printf("    FT[%-16.13X]\n", -9587);
-	printf("PRINTF[%-16.2X]\n", -9587);
-	ft_printf("    FT[%-16.2X]\n", -9587);
-	printf("PRINT[%*.*X]\n", 0, 0, 0);
-	ft_printf("   ft[%*.*X]\n", 0, 0, 0);
-
-	printf("\n\n\nTEST U\n\n\n");
-
-	printf("PRINT[%8u]\n", 62);
-	ft_printf("   ft[%8u]\n", 62);
-	printf("PRINT[%.16u]\n", 21578);
-	ft_printf("   ft[%.16u]\n", 21578);
-	printf("PRINT[%15u]\n", 42);
-	ft_printf("   ft[%15u]\n", 42);
-	printf("PRINT[%16.13u]\n", 9587);
-	ft_printf("   ft[%16.13u]\n", 9587);
-	printf("PRINT[%-.8u]\n", 9867);
-	ft_printf("   ft[%-.8u]\n", 9867);
-	printf("PRINT[%09.12u]\n", 254);
-	ft_printf("   ft[%09.12u]\n", 254);
-	printf("PRINT[%2.3u]\n", 0);
-	ft_printf("   ft[%2.3u]\n", 0);
-	printf("PRINT[%*.*u]\n", 0, 0, 0);
-	ft_printf("   ft[%*.*u]\n", 0, 0, 0);
+printf("\n\n\nTEST PTR\n\n\n");
 
 
-	return (0);
+char	*str = "Ceci est un test.";
+
+ft_printf("   FT[%p]\n", str);
+printf("PRINT[%p]\n", str);
+ft_printf("   FT[%8p]\n", str);
+printf("PRINT[%8p]\n", str);
+ft_printf("   FT[%16p]\n", str);
+printf("PRINT[%16p]\n", str);
+ft_printf("   FT[%15p]\n", str);
+printf("PRINT[%15p]\n", str);
+ft_printf("   FT[%-15p]\n", str);
+printf("PRINT[%-15p]\n", str);
+ft_printf("   FT[%16p]\n", str);
+printf("PRINT[%16p]\n", str);
+ft_printf("   FT[%9p]\n", str);
+printf("PRINT[%9p]\n", str);
+ft_printf("   FT[%p]\n", NULL);
+printf("PRINT[%p]\n", NULL);
+ft_printf("   FT[%2p]\n", NULL);
+printf("PRINT[%2p]\n", NULL);
+ft_printf("   FT[%*p]\n", 0, NULL);
+printf("PRINT[%*p]\n", 0, NULL);
+
+
+printf("\n\n\nTEST HEX\n\n\n");
+
+printf("PRINTF[%8x]\n", -62);
+ft_printf("    FT[%8x]\n", -62);
+printf("PRINTF[%.16X]\n", -21578);
+ft_printf("    FT[%.16X]\n", -21578);
+printf("PRINTF[%15x]\n", -42);
+ft_printf("    FT[%15x]\n", -42);
+printf("PRINTF[%16.13X]\n", -9587);
+ft_printf("    FT[%16.13X]\n", -9587);
+printf("PRINTF[%-.8x]\n", -9867);
+ft_printf("    FT[%-.8x]\n", -9867);
+printf("PRINT[%09.12X]\n", -254);
+ft_printf("   FT[%09.12X]\n", -254);
+printf("PRINTF[%2.3x]\n", 0);
+ft_printf("    FT[%2.3x]\n", 0);
+printf("PRINT[%*.*X]\n", 3, 2, 246688);
+ft_printf("   FT[%*.*X]\n", 3, 2, 246688);
+printf("PRINTF[%-16.13X]\n", -9587);
+ft_printf("    FT[%-16.13X]\n", -9587);
+printf("PRINTF[%-16.2X]\n", -9587);
+ft_printf("    FT[%-16.2X]\n", -9587);
+printf("PRINT[%*.*X]\n", 0, 0, 0);
+ft_printf("   ft[%*.*X]\n", 0, 0, 0);
+
+printf("\n\n\nTEST U\n\n\n");
+
+printf("PRINT[%8u]\n", 62);
+ft_printf("   ft[%8u]\n", 62);
+printf("PRINT[%.16u]\n", 21578);
+ft_printf("   ft[%.16u]\n", 21578);
+printf("PRINT[%15u]\n", 42);
+ft_printf("   ft[%15u]\n", 42);
+printf("PRINT[%16.13u]\n", 9587);
+ft_printf("   ft[%16.13u]\n", 9587);
+printf("PRINT[%-.8u]\n", 9867);
+ft_printf("   ft[%-.8u]\n", 9867);
+printf("PRINT[%09.12u]\n", 254);
+ft_printf("   ft[%09.12u]\n", 254);
+printf("PRINT[%2.3u]\n", 0);
+ft_printf("   ft[%2.3u]\n", 0);
+printf("PRINT[%*.*u]\n", 0, 0, 0);
+ft_printf("   ft[%*.*u]\n", 0, 0, 0);
+
+
+return (0);
 }
 
 
@@ -1110,7 +1419,7 @@ void	str_test(void)
 void	ptr_test(void)
 {
 	char	*str = "Ceci est un test.";
-;
+	;
 
 	printf("%8p\n", str);
 	ft_printf("%8p\n", str);
@@ -1280,9 +1589,9 @@ int		main(void)
 	hex_test();
 	notype_test();
 	count_test();
-//	altflag_test();
-//	sign_test();
-//	blank_test();
+	//	altflag_test();
+	//	sign_test();
+	//	blank_test();
 	return (0);
 }
 
