@@ -6,7 +6,7 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/03/16 21:55:22 by matt             ###   ########.fr       */
+/*   Updated: 2021/03/16 22:54:03 by matt             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -370,7 +370,7 @@ int		ft_put_p_zero(char *str, int padding, int fdp)
 
 int		ft_put_p(t_args *args, va_list ap)
 {
-	
+
 	int padding;
 	int fdp;
 	int width;
@@ -448,56 +448,8 @@ int		ft_put_p(t_args *args, va_list ap)
 	return (res + ft_put_p_zero(tmp, padding, fdp));
 }
 
-/*
 
-int		ft_put_p(t_args *args, va_list ap)
-{
-	int width;
-	int precision;
-	int len;
-	long s;
-	int res;
-	char *base;
-	char *tmp;
 
-	base = "0123456789abcdef";
-	width = args->has_width ? args->width : 0;
-	precision = args->has_prec ? args->prec : 0;
-	if (args->has_star_width)
-		width = args->has_star_width ? args->star_width : 0;
-	if (args->has_star_prec)
-		precision = args->has_star_prec ? args->star_prec : 0;
-	s = (long)va_arg(ap, void *);
-	tmp = ft_itoa_base(s, base);
-	tmp = ft_strjoin("0x", tmp);
-	len = ft_strlen(tmp);
-	if (args->has_prec)
-	{
-		if (len > precision)
-			len = precision;
-	}
-	res = 0;
-	if (args->minus)
-	{
-		res += ft_putstrl(tmp, len);
-		while ((width - ft_strlen(tmp)) > 0)
-		{
-			res += ft_putchar(' ');
-			width--;
-		}
-		return (res);
-	}
-	else
-	{
-		while ((width - ft_strlen(tmp)) > 0)
-		{
-			res += ft_putchar(' ');
-			width--;
-		}
-	}
-	return (res + ft_putstrl(tmp, len));
-}
-*/
 // -----------  XXXXXXXX --------------
 
 int		ft_put_X_zero(char *str, int padding, int fdp)
@@ -525,8 +477,8 @@ int		ft_put_X(t_args *args, va_list ap)
 	int padding;
 	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
 	int fdp;
-	
-	
+
+
 	base = "0123456789ABCDEF";
 	fdp = 0;
 	if (args->has_width && args->has_prec && (args->prec == -1 || args->prec == 0))
@@ -592,84 +544,6 @@ int		ft_put_X(t_args *args, va_list ap)
 	return (res + ft_put_X_zero(tmp, padding, fdp));
 }
 
-/*
-
-int		ft_put_X(t_args *args, va_list ap)
-{
-	int width;
-	int precision;
-	int len;
-	long s;
-	int res;
-	char *base;
-	char *tmp;
-	int padding;
-	int tg = 0;
-
-	base = "0123456789ABCDEF";
-	width = args->has_width ? args->width : 0;
-	precision = args->has_prec ? args->prec : 0;
-	if (args->has_star_width){
-		width = args->has_star_width ? args->star_width : 0;
-	}
-	if (args->has_star_prec){
-		precision = args->has_star_prec ? args->star_prec : 0;
-	}
-	s = (long)va_arg(ap, void *);
-	if (ft_check_full_zero_long(args, s))
-		return (0);
-	tmp = ft_itoa_base(s, base);
-	len = ft_strlen(tmp);
-	padding = len < precision ? (precision - len) : 0;
-	if (args->has_prec)
-	{
-		if (len > precision)
-			len = precision;
-	}
-	res = 0;
-	if (args->minus)
-	{
-		while (padding-- > 0)
-		{
-			res += ft_putchar('0');
-			tg++;
-		}
-		res += ft_putstrl(tmp, ft_strlen(tmp));
-		while ((width - (tg + ft_strlen(tmp))) > 0)
-		{
-			res += ft_putchar(' ');
-			width--;
-		}
-		return (res);
-	}
-	else
-	{
-		if (precision && len < precision)
-		{
-			while ((width - precision) > 0)
-			{
-				res += ft_putchar(' ');
-				width--;
-			}
-		}
-		else if(!precision)
-		{
-			while ((width - len) > 0)
-			{
-				res += ft_putchar(' ');
-				width--;
-			}
-		}
-		while (padding-- > 0)
-		{
-			res += ft_putchar('0');
-		}
-	}
-
-	return (res + ft_putstr(tmp));
-}
-
-*/
 
 // ---------- xxxxxxxxxxxx --------------
 
@@ -698,8 +572,8 @@ int		ft_put_x(t_args *args, va_list ap)
 	int padding;
 	int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
 	int fdp;
-	
-	
+
+
 	base = "0123456789abcdef";
 	fdp = 0;
 	if (args->has_width && args->has_prec && (args->prec == -1 || args->prec == 0))
@@ -767,7 +641,7 @@ int		ft_put_x(t_args *args, va_list ap)
 
 
 // ----------- sssssssss ------------
-
+// SI ARGS MINUS ET WIDTH NEGATIVE ALORS MINUS DISPARAIT ET WIDTH DEVIENT POSITIVE
 int		ft_put_s(t_args *args, va_list ap)
 {
 	int width;
@@ -789,9 +663,21 @@ int		ft_put_s(t_args *args, va_list ap)
 	if (!s)
 		s = "(null)";
 	len = ft_strlen(s);
+	if (args->has_star_width && args->star_width < 0)
+
+	{
+		printf("star wid = %d\n  star_prec = %d\n", args->star_width, args->star_prec);
+		res += ft_putstr(s);
+		while ((width - len) > 0)
+		{
+			res += ft_putchar(' ');
+			return (res);
+		}
+	}
 	if (args->has_prec && args->has_star_prec && args->star_prec < 0)
 	{
-		res += ft_putstr(s);
+		printf("star_prec = %d\n", args->star_prec);
+		return (res += ft_putstr(s));
 	}
 	if (args->has_prec)
 	{
@@ -988,125 +874,6 @@ int		ft_put_u(t_args *args, va_list ap)
 	}
 	return (res + ft_put_u_zero(d, padding, fdp));
 }
-
-
-/*
-   int		ft_put_u_zero(unsigned int u, int padding)
-   {
-   int res;
-
-   res = 0;
-   while (padding-- > 0)
-   res += ft_putchar('0');
-   if (u / 10)
-   res += ft_put_u_zero(u / 10, padding);
-   res += ft_putchar((u % 10) + '0');
-   return (res);
-   }
-
-   int		ft_put_u(t_args *args, va_list ap)
-   {
-   int width;
-   int precision;
-   unsigned int u;
-   int len;
-   int padding;
-   int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
-
-
-   width = args->has_width ? args->width : 0;
-   precision = args->has_prec ? args->prec : 0;
-   if (args->has_star_width){
-   width = args->has_star_width ? args->star_width : 0;
-   }
-   if (args->has_star_prec){
-   precision = args->has_star_prec ? args->star_prec : 0;
-   }
-   u = va_arg(ap, int);
-   if (ft_check_full_zero(args, u))
-   return (0);
-   len = ft_nb_digits(u);
-   res = 0;
-   padding = len < precision ? (precision - len) : 0;
-   len += padding;
-   while ((width - len) > 0)
-   {
-   res += ft_putchar(' ');
-   width--;
-   }
-   return (res + ft_put_u_zero(u, padding));
-   }
- */
-
-
-// ------------ dddddddd -------------
-
-
-/*
-   int		ft_put_d_zero(int d, int padding)
-   {
-   int res;
-
-   res = 0;
-   if (d == -2147483648)
-   {
-   res += ft_putchar('-');
-   while (padding-- > 0)
-   res += ft_putchar('0');
-   res += ft_putstr("2147483648");
-   return (res);
-   }
-   if (d < 0)
-   {
-   res += ft_putchar('-');
-   d *= -1;
-   }
-   while (padding-- > 0)
-   res += ft_putchar('0');
-   if (d / 10)
-   res += ft_put_d_zero(d / 10, padding);
-   res += ft_putchar((d % 10) + '0');
-   return (res);
-   }
-
-
-//GERER LE ZERO VIA STRUCT AINSI QUE LETOILE POUR LE NOMBRE DE WIDTH
-int		ft_put_d(t_args *args, va_list ap)
-{
-int width;
-int precision;
-int d;
-int len;
-int padding;
-int res; //VARIABLE A METTRE PLUTOT DANS LA STRUCTURE
-
-
-width = args->has_width ? args->width : 0;
-precision = args->has_prec ? args->prec : 0;
-if (args->has_star_width){
-width = args->has_star_width ? args->star_width : 0;
-}
-if (args->has_star_prec){
-precision = args->has_star_prec ? args->star_prec : 0;
-}
-d = va_arg(ap, int);
-if (ft_check_full_zero(args, d))
-return (0);
-len = ft_nb_digits(d);
-res = 0;
-if (d < 0)
-padding = (len - 1) < precision ? (precision - (len - 1)) : 0;
-else
-padding = len < precision ? (precision - len) : 0;
-len += padding;
-while ((width - len) > 0)
-{
-res += ft_putchar(' ');
-width--;
-}
-return (res + ft_put_d_zero(d, padding));
-}
- */
 
 
 int		ft_put_d_zero(int d, int padding, int fdp)
@@ -1368,7 +1135,6 @@ int		ft_printf(const char *format, ...)
 }
 
 
-/*
 
 int main()
 {
@@ -1440,9 +1206,10 @@ int main()
 	ft_printf("[%*s]\n", -32, "abc");
 	printf("[%.*s]\n", -3, "hello");
 	ft_printf("[%.*s]\n", -3, "hello");
+	printf("[%-*.*s]\n", -7, -3, "yolo");
+	ft_printf("[%-*.*s]\n", -7, -3, "yolo");
 
 
 
 	return (0);
 }
-*/
