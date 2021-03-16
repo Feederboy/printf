@@ -6,9 +6,16 @@
 /*   By: matt <maquentr@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/01 12:05:52 by matt              #+#    #+#             */
-/*   Updated: 2021/03/04 15:56:52 by maquentr         ###   ########.fr       */
+/*   Updated: 2021/03/16 21:55:22 by matt             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+
+
+
+//gerer les prec negatives soit au moment du parsing soit dans la fonction (probablement dans la fonction)
+
+
 
 #include "ft_printf.h"
 
@@ -296,6 +303,10 @@ char	*read_args(t_args *args, char *itr, va_list ap)
 		{
 			args->has_star_width = 1;
 			args->star_width = va_arg(ap, int);
+			if (args->star_width < 0){
+				args->star_width *= -1;
+				args->minus = 1;
+			}
 			itr++;
 		}
 		//widt ---- if there's no *width before
@@ -374,6 +385,7 @@ int		ft_put_p(t_args *args, va_list ap)
 	base = "0123456789abcdef";
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
+	res = 0;
 	if (args->has_star_width)
 		width = args->has_star_width ? args->star_width : 0;
 	if (args->has_star_prec)
@@ -381,12 +393,16 @@ int		ft_put_p(t_args *args, va_list ap)
 	s = (long)va_arg(ap, void *);
 	tmp = ft_itoa_base(s, base);
 	tmp = ft_strjoin("0x", tmp);
+	if (s == 0 && args->has_prec)
+		tmp = "0x";
 	len = ft_strlen(tmp);
 	if (ft_check_full_zero_long(args, s))
 		return (0);
 	if (ft_ntm2(args, s))
-		return (0);
-	res = 0;
+	{
+		res +=ft_putstr(tmp);
+		return (res);
+	}
 	if (s < 0)
 		padding = (len - 1) < precision ? (precision - (len - 1)) : 0;
 	else
@@ -760,6 +776,7 @@ int		ft_put_s(t_args *args, va_list ap)
 	char *s;
 	int res;
 
+	res = 0;
 	width = args->has_width ? args->width : 0;
 	precision = args->has_prec ? args->prec : 0;
 	if (args->has_star_width){
@@ -772,6 +789,10 @@ int		ft_put_s(t_args *args, va_list ap)
 	if (!s)
 		s = "(null)";
 	len = ft_strlen(s);
+	if (args->has_prec && args->has_star_prec && args->star_prec < 0)
+	{
+		res += ft_putstr(s);
+	}
 	if (args->has_prec)
 	{
 		if (precision == -1)
@@ -779,7 +800,6 @@ int		ft_put_s(t_args *args, va_list ap)
 		else if (len > precision)
 			len = precision;
 	}
-	res = 0;
 	if (args->minus)
 	{
 		res += ft_putstrl(s,len);
@@ -1347,6 +1367,7 @@ int		ft_printf(const char *format, ...)
 	return (res);
 }
 
+
 /*
 
 int main()
@@ -1413,12 +1434,15 @@ int main()
 	ft_printf("[%05x]\n", 43);
 	printf("[%03x]\n", 0);
 	ft_printf("[%03x]\n", 0);
+	printf("[%.p]\n", NULL);
+	ft_printf("[%.p]\n", NULL);
+	printf("[%*s]\n", -32, "abc");
+	ft_printf("[%*s]\n", -32, "abc");
+	printf("[%.*s]\n", -3, "hello");
+	ft_printf("[%.*s]\n", -3, "hello");
 
 
 
 	return (0);
 }
-
 */
-
-
